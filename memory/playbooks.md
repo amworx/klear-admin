@@ -25,10 +25,11 @@ Full steps in patterns.md P-001: generate_link (service key, curl UA) → verify
 ## PB-004 — deploy_vercel
 1. `npm run build` green.
 2. Push to GitHub `amworx/klear-admin` (main branch).
-3. Ensure `.vercel/` link exists; if not: `vercel login` (device flow), `vercel link --repo --scope <team>`, `vercel deploy --prod` or rely on git push integration.
-4. Set env vars in Vercel project: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (never service key).
+3. Ensure `.vercel/` link exists; if not: `vercel login` (device flow), `vercel link --yes --scope <team>`, `vercel deploy --yes`.
+4. Set env vars in Vercel project: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (never service key) — pipe value via stdin to `vercel env add NAME <env>`.
 5. Verify: open deployed URL → login → dashboard renders.
 6. NOTE: no-auth deploy.sh fallback EXCLUDES `.env.*` so it cannot build this app (env vars required at build). Use real Vercel auth + env vars instead.
+7. OPTIONAL git-push deploys: install Vercel GitHub App on the GitHub account, then `vercel git connect https://github.com/amworx/klear-admin`.
 
 ## PB-005 — task_complete (per milestone)
 1. Gates green (typecheck/lint/build).

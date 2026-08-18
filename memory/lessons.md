@@ -34,3 +34,8 @@ Append-only.
 ## L-006 — UI Design Playbook compliance achieved with zero ad-hoc UI
 - All screens use shadcn components only (table, dialog, alert-dialog, sheet, select, input-otp, sidebar, chart, sonner). No hand-rolled primitives.
 - **Reusable pattern**: for admin dashboards, prefer the shadcn sidebar + topbar shell, StatCard/PageHeader utilities, and table+dialog CRUD layouts exactly as in this project's `src/components/layout/page-utils.tsx`.
+
+## L-007 — Vercel deploy: link --repo alpha + GitHub connect can fail; direct deploy works
+- **Problem**: `vercel link --repo` (alpha) found the project but selected none; `vercel git connect` failed "Failed to connect" — the Vercel GitHub App isn't installed for the amworx GitHub account.
+- **Fix**: `vercel link --yes --scope <team>` created the project + `.vercel/project.json`; set env vars via `vercel env add NAME production/preview/development` (pipe value via stdin to avoid interactive prompt); `vercel deploy --yes` deployed to production (no --prod needed; deploy alias was production because project has no git prod branch configured — inspect output said "▲ Production").
+- **Reusable pattern**: when git integration is unavailable, use `vercel link --yes` + `vercel env add` + `vercel deploy` directly. To enable git-push deploys later, install the Vercel GitHub App on the account and re-run `vercel git connect <repo-url>`.

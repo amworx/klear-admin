@@ -23,3 +23,14 @@ Append-only. Format: EVT-YYYYMMDD-XXXX
 - **errors**: none
 - **lessons**: L-003 (session injection), L-004 (detectSessionInUrl hash flow)
 - **tags**: e2e, chrome-devtools
+
+## EVT-20260818-0003
+- **timestamp**: 2026-08-18
+- **mode**: BUILD
+- **action**: Vercel production deploy
+- **summary**: Authenticated Vercel CLI as amworx (device flow, user-confirmed). Project `amworxs-projects/klear-admin` created; env vars VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY added (all environments). Deployed to production: https://klear-admin.vercel.app. E2E verified: login page renders Arabic RTL, full auth flow via URL-hash works, dashboard loads real data.
+- **result**: SUCCESS
+- **files**: .vercel/project.json, .env.local (gitignored)
+- **errors**: `vercel link --repo` alpha didn't auto-create; GitHub repo connect failed (Vercel GitHub App not installed on amworx account) — git-push deploys not enabled; direct `vercel deploy` used instead
+- **lessons**: L-007
+- **tags**: deploy, vercel, production
