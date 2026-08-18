@@ -22,6 +22,10 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  AddUserDialog,
+  AddUserTrigger,
+} from "@/components/add-user-dialog"
 import { Briefcase, CircleDot, Truck } from "lucide-react"
 
 export function ProvidersPage() {
@@ -33,7 +37,16 @@ export function ProvidersPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title={t("navProviders")} description={t("appTagline")} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <PageHeader
+          title={t("navProviders")}
+          description={t("appTagline")}
+        />
+        <AddUserDialog
+          role="provider"
+          trigger={<AddUserTrigger label={t("addProvider")} />}
+        />
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <StatCard

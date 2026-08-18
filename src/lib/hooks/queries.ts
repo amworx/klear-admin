@@ -199,6 +199,25 @@ export async function updateClientProfile(
   if (error) throw error
 }
 
+// Create a client/provider account. Requires admin (the edge function verifies
+// the caller's role server-side and creates the auth user + profile with the
+// service role — the browser only ever holds the anon key).
+export async function createUserAccount(input: {
+  email: string
+  full_name?: string
+  phone?: string
+  role: "customer" | "provider"
+}): Promise<{ id: string }> {
+  const { data, error } = await supabase.functions.invoke("admin-create-user", {
+    body: input,
+  })
+  if (error) throw error
+  if (!data?.success || !data?.profile?.id) {
+    throw new Error(data?.error || "Failed to create account")
+  }
+  return { id: data.profile.id }
+}
+
 export function useClientBookings(userId: string) {
   return useQuery({
     queryKey: ["client-bookings", userId],

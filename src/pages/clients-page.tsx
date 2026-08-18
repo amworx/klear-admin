@@ -70,6 +70,10 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  AddUserDialog,
+  AddUserTrigger,
+} from "@/components/add-user-dialog"
 import { toast } from "sonner"
 import {
   Ban,
@@ -294,13 +298,19 @@ export function ClientsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader title={t("navClients")} description={t("appTagline")} />
 
-      <div className="relative max-w-sm">
-        <Search className="absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={t("searchPlaceholder")}
-          className="ps-9"
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="relative w-full max-w-sm">
+          <Search className="absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t("searchPlaceholder")}
+            className="ps-9"
+          />
+        </div>
+        <AddUserDialog
+          role="customer"
+          trigger={<AddUserTrigger label={t("addClient")} />}
         />
       </div>
 
@@ -515,7 +525,6 @@ function ProfileTab({
     full_name: client.full_name ?? "",
     phone: client.phone ?? "",
     role: client.role,
-    address: client.address ?? "",
     is_active: client.is_active,
   })
 
@@ -524,7 +533,6 @@ function ProfileTab({
       full_name: client.full_name ?? "",
       phone: client.phone ?? "",
       role: client.role,
-      address: client.address ?? "",
       is_active: client.is_active,
     })
     setEditing(true)
@@ -541,7 +549,6 @@ function ProfileTab({
         full_name: form.full_name.trim() || null,
         phone: form.phone.trim() || null,
         role: form.role,
-        address: form.address.trim() || null,
         is_active: form.is_active,
       })
       await onChanged()
@@ -549,7 +556,6 @@ function ProfileTab({
         full_name: form.full_name.trim() || null,
         phone: form.phone.trim() || null,
         role: form.role,
-        address: form.address.trim() || null,
         is_active: form.is_active,
       })
       toast.success(t("profileUpdated"))
@@ -587,10 +593,6 @@ function ProfileTab({
             </dd>
           </div>
           <div className="col-span-2">
-            <dt className="text-muted-foreground">{t("addressText")}</dt>
-            <dd className="font-medium">{client.address || "—"}</dd>
-          </div>
-          <div>
             <dt className="text-muted-foreground">{t("memberSince")}</dt>
             <dd className="font-medium">{formatDateTime(client.created_at)}</dd>
           </div>
@@ -648,14 +650,6 @@ function ProfileTab({
               <SelectItem value="admin">admin</SelectItem>
             </SelectContent>
           </Select>
-        </div>
-        <div className="grid gap-1.5">
-          <Label htmlFor="profile-address">{t("addressText")}</Label>
-          <Input
-            id="profile-address"
-            value={form.address}
-            onChange={(e) => setForm({ ...form, address: e.target.value })}
-          />
         </div>
       </div>
       <div className="flex items-center gap-2">

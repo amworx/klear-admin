@@ -168,6 +168,10 @@ const translations = {
     confirmUnblock: "هل أنت متأكد من إلغاء حظر هذا المستخدم؟",
     userBlocked: "تم حظر المستخدم",
     userUnblocked: "تم إلغاء حظر المستخدم",
+    addClient: "إضافة عميل",
+    addProvider: "إضافة مزود خدمة",
+    userCreated: "تم إنشاء الحساب بنجاح",
+    emailExists: "هذا البريد الإلكتروني مسجّل مسبقاً",
   },
   en: {
     dir: "ltr",
@@ -318,6 +322,10 @@ const translations = {
     confirmUnblock: "Are you sure you want to unblock this user?",
     userBlocked: "User blocked",
     userUnblocked: "User unblocked",
+    addClient: "Add client",
+    addProvider: "Add provider",
+    userCreated: "Account created successfully",
+    emailExists: "This email is already registered",
   },
 } as const
 
