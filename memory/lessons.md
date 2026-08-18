@@ -62,3 +62,14 @@ Append-only.
 - **Root cause**: Tailwind v4 emits `rotate: 180deg` (independent CSS property), not `transform: rotate(180deg)`.
 - **Fix**: check `getComputedStyle(el).rotate` when verifying v4 rotate utilities.
 - **Reusable pattern**: in Tailwind v4, `rotate-*` utilities compile to the `rotate` property; read `.rotate` (not `.transform`) when validating in DevTools/scripts.
+## L-012 — Tailwind v4 RTL switch fix: physical translate needs an rtl negative override (2026-08-18)
+- **Problem**: Switch thumb overflowed the track in RTL when checked (thumb x=476..492 vs track 447..479); unchecked was inside (462..478).
+- **Root cause**: shadcn/base-ui Switch uses a physical \	ranslate-x-[calc(100%-2px)]\ for the checked state; in RTL that positive X moves the thumb toward the overflow edge instead of inward.
+- **Fix**: add \tl:group-data-[size=default]/switch:data-checked:-translate-x-[calc(100%-2px)]\ (and the sm variant) to the thumb className so RTL mirrors the offset.
+- **Reusable pattern**: any physical \	ranslate-x\/inset offset inside a start-aligned (RTL) container needs an explicit \tl:\ negative override; verify geometry via getBoundingClientRect in dev, not just classes.
+
+## L-013 — Prebuilt Vercel output needs vercel.json SPA rewrite for client routes (2026-08-18)
+- **Problem**: after deploying prebuilt output, direct navigation to /clients returned 404 NOT_FOUND while / (which the SPA redirects) worked.
+- **Root cause**: the generated .vercel/output/config.json only had the error handler; without a filesystem rewrite to /index.html, deep links 404. The Git-integration path injects the rewrite automatically; the manual prebuilt path doesn't.
+- **Fix**: add \{"rewrites":[{"source":"/(.*)","destination":"/index.html"}]}\ to vercel.json, rebuild with \ercel build --prod\, restage, redeploy — config.json then contains the \dest: /index.html\ route.
+- **Reusable pattern**: when manually deploying prebuilt Vite SPAs, always include vercel.json rewrites and verify config.json contains the SPA fallback route before deploying. Also: stage project.json INSIDE .vercel/ in the temp deploy dir (a stale project.json at the root caused a spurious "klear-deploy" project creation).

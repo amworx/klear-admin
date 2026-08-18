@@ -44,3 +44,14 @@ Blocked users (`profiles.is_active = false`) must be visible to admin but gated 
 - Profile/Cars/Addresses use inline edit forms inside the tab; Bookings/Payments are read-only lists.
 - "Default" flags (`is_default` on cars/user_addresses) enforced with a partial unique index `*_one_default_per_user`; mutations clear other defaults first (branch on id existence — see L-008).
 - After profile save, update parent `selected` via `onProfileUpdated` so the dialog reflects changes without reload.
+## P-007 �?" Admin-created users via Edge Function (browser anon key only)
+**When**: the dashboard must create clients/providers, but profiles.id references uth.users(id) and the browser only holds the anon key.
+**Steps**:
+1. Edge Function dmin-create-user: CORS incl. x-client-info, x-supabase-api-version (supabase-js sends them); verify caller via uth.getUser(jwt) + profiles.role='admin'; create auth user (email_confirm: true so OTP login works immediately) + profile insert with the service role; on profile failure, delete the auth user (no half-created accounts).
+2. Web app: supabase.functions.invoke("admin-create-user", { body }) — no service key ever leaves the server.
+3. Shared AddUserDialog (role prop) reused by Clients (customer) and Providers (provider) pages; invalidate clients, providers, overview-stats after success.
+**Why**: creation needs the service role (server-only); the edge function enforces admin role server-side and keeps RLS intact.
+
+## P-008 �?" RTL switch/toggle fix (Tailwind v4)
+- shadcn/base-ui Switch thumb uses physical 	ranslate-x-[calc(100%-2px)]; add an tl: negative override (tl:group-data-[size=default]/switch:data-checked:-translate-x-[calc(100%-2px)]) to mirror in RTL.
+- Verify with getBoundingClientRect (thumb must stay within track bounds) in dev, then re-run gates.
