@@ -55,3 +55,14 @@ Append-only. Format: EVT-YYYYMMDD-XXXX
 - **errors**: CORS 400 on edge function (missing x-client-info in Access-Control-Allow-Headers) — fixed + redeployed; direct /clients 404 in prod (prebuilt config.json lacked SPA rewrite) — fixed with vercel.json rewrites; deploy temp dir must keep project.json INSIDE .vercel/ (stale klear-deploy project created once)
 - **lessons**: L-012, L-013
 - **tags**: switch, rtl, edge-function, add-user, deploy, vercel, spa-rewrite
+
+## EVT-20260818-0006
+- **timestamp**: 2026-08-18
+- **mode**: BUILD
+- **action**: Install Klear app on Galaxy A34 5G (wireless debugging)
+- **summary**: USB adb failed (Samsung ADB interface present but adb saw nothing; USB driver issue, dl.google.com unreachable for the Google USB driver). Phone was also on WiFi (10.10.0.18, Galaxy-A34-5G). User enabled Wireless debugging + pairing code 568650, port 42281. \db pair 10.10.0.18:42281\ succeeded (guid adb-RFCWA0BJT9F), then \db install -r app-debug.apk\ succeeded. App package is \com.klear.klear\ (NOT com.klear.app); launched via monkey and verified mCurrentFocus=com.klear.klear/.MainActivity. Cleaned up stray APK copies on the Huawei phone (10.10.0.5).
+- **result**: SUCCESS — Klear installed + running on Galaxy A34 5G
+- **files**: C:\Users\HP\Documents\code_repo\android\klear\src\build\app\outputs\flutter-apk\app-debug.apk
+- **errors**: USB adb invisible device (Samsung driver OK in Device Manager but \db devices\ empty) — bypassed via wireless debugging; \db pair\ code expired once (retried immediately, port still open)
+- **lessons**: L-014
+- **tags**: install, adb, wireless-debugging, galaxy-a34
