@@ -25,7 +25,6 @@ import { cn } from "@/lib/utils"
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -66,9 +65,9 @@ const NAV_ITEMS: NavItem[] = [
 ]
 
 function AppSidebar() {
-  const { t } = useI18n()
+  const { t, dir } = useI18n()
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" side={dir === "rtl" ? "right" : "left"}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -112,15 +111,6 @@ function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton render={<Link to="/pricing" />}>
-              {t("navPricing")}
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
     </Sidebar>
   )
 }
@@ -146,7 +136,7 @@ function Topbar() {
   return (
     <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <SidebarTrigger />
-      <Separator orientation="vertical" className="mr-2 h-4" />
+      <Separator orientation="vertical" className="ms-2 h-4" />
       <div className="flex flex-1 items-center justify-end gap-2">
         <Button
           variant="ghost"

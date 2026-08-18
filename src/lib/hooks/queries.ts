@@ -191,6 +191,109 @@ export async function setClientActive(
   if (error) throw error
 }
 
+export async function updateClientProfile(
+  userId: string,
+  patch: Partial<Profile>
+): Promise<void> {
+  const { error } = await supabase.from("profiles").update(patch).eq("id", userId)
+  if (error) throw error
+}
+
+export function useClientBookings(userId: string) {
+  return useQuery({
+    queryKey: ["client-bookings", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bookings")
+        .select(
+          `*,
+          service:services(id, name_ar, name_en, base_price),
+          car:cars(id, make, model, plate_number, size),
+          payment:payments(id, amount, status, method)`
+        )
+        .eq("customer_id", userId)
+        .order("created_at", { ascending: false })
+      if (error) throw error
+      return (data ?? []) as BookingWithRelations[]
+    },
+  })
+}
+
+export function useClientPayments(userId: string) {
+  return useQuery({
+    queryKey: ["client-payments", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payments")
+        .select(
+          `*,
+          booking:bookings(id, service_id, status,
+            service:services(id, name_ar, name_en))`
+        )
+        .eq("booking.customer_id", userId)
+        .order("created_at", { ascending: false })
+      if (error) throw error
+      return (data ?? []) as (Payment & {
+        booking: {
+          id: string
+          status: string
+          service: { id: string; name_ar: string; name_en: string } | null
+        } | null
+      })[]
+    },
+  })
+}
+
+// ---------- Client details: cars & addresses CRUD ----------
+
+// When a car is set as default, the partial unique index
+// cars_one_default_per_user requires every other car of that user to be
+// unset first. We clear defaults (all rows when creating, or all except the
+// edited row when updating), then upsert. Each call is idempotent.
+export async function saveClientCar(car: Partial<Car>): Promise<void> {
+  if (car.is_default && car.user_id) {
+    let query = supabase
+      .from("cars")
+      .update({ is_default: false })
+      .eq("user_id", car.user_id)
+    if (car.id) {
+      query = query.neq("id", car.id)
+    }
+    const { error: clearError } = await query
+    if (clearError) throw clearError
+  }
+  const { error } = await supabase.from("cars").upsert(car)
+  if (error) throw error
+}
+
+export async function deleteClientCar(id: string): Promise<void> {
+  const { error } = await supabase.from("cars").delete().eq("id", id)
+  if (error) throw error
+}
+
+export async function saveClientAddress(
+  address: Partial<UserAddress>
+): Promise<void> {
+  if (address.is_default && address.user_id) {
+    let query = supabase
+      .from("user_addresses")
+      .update({ is_default: false })
+      .eq("user_id", address.user_id)
+    if (address.id) {
+      query = query.neq("id", address.id)
+    }
+    const { error: clearError } = await query
+    if (clearError) throw clearError
+  }
+  const { error } = await supabase.from("user_addresses").upsert(address)
+  if (error) throw error
+}
+
+export async function deleteClientAddress(id: string): Promise<void> {
+  const { error } = await supabase.from("user_addresses").delete().eq("id", id)
+  if (error) throw error
+}
+
 // ---------- Services ----------
 
 export function useServices() {

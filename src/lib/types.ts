@@ -76,6 +76,7 @@ export type Car = {
   model: string
   plate_number: string
   size: "small" | "medium" | "large"
+  is_default: boolean
   created_at: string
 }
 
