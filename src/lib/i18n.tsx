@@ -1,0 +1,352 @@
+/* eslint-disable react-refresh/only-export-components */
+import * as React from "react"
+
+export type Lang = "ar" | "en"
+
+export const DEFAULT_LANG: Lang = "ar"
+
+const translations = {
+  ar: {
+    dir: "rtl",
+    appName: "كليير",
+    appTagline: "لوحة تحكم الإدارة",
+    // Navigation
+    navOverview: "نظرة عامة",
+    navBookings: "الحجوزات",
+    navClients: "العملاء",
+    navServices: "الخدمات والباقات",
+    navPricing: "التسعير والإعدادات",
+    navProviders: "مقدمو الخدمة",
+    navPayments: "المدفوعات",
+    // Auth
+    loginTitle: "تسجيل الدخول",
+    loginSubtitle: "أدخل بريدك الإلكتروني لاستلام رمز الدخول",
+    email: "البريد الإلكتروني",
+    sendCode: "إرسال الرمز",
+    enterCode: "أدخل رمز التحقق",
+    codeSent: "تم إرسال الرمز إلى بريدك الإلكتروني",
+    verifying: "جارٍ التحقق...",
+    signOut: "تسجيل الخروج",
+    unauthorized: "غير مصرح",
+    unauthorizedMsg: "هذا الحساب ليس لديه صلاحيات الإدارة.",
+    invalidEmail: "يرجى إدخال بريد إلكتروني صحيح",
+    authError: "حدث خطأ. يرجى المحاولة مرة أخرى",
+    // Shell
+    menu: "القائمة",
+    search: "بحث...",
+    theme: "المظهر",
+    language: "اللغة",
+    account: "الحساب",
+    // Common
+    loading: "جارٍ التحميل...",
+    noData: "لا توجد بيانات",
+    actions: "إجراءات",
+    save: "حفظ",
+    cancel: "إلغاء",
+    edit: "تعديل",
+    delete: "حذف",
+    confirm: "تأكيد",
+    close: "إغلاق",
+    status: "الحالة",
+    date: "التاريخ",
+    amount: "المبلغ",
+    customer: "العميل",
+    provider: "مقدم الخدمة",
+    service: "الخدمة",
+    all: "الكل",
+    searchPlaceholder: "بحث...",
+    refresh: "تحديث",
+    // Status labels
+    statusPending: "قيد الانتظار",
+    statusAccepted: "مقبول",
+    statusInProgress: "قيد التنفيذ",
+    statusCompleted: "مكتمل",
+    statusCancelled: "ملغي",
+    statusPaid: "مدفوع",
+    statusFailed: "فشل",
+    statusRefunded: "مسترجع",
+    // Overview
+    totalRevenue: "إجمالي الإيرادات",
+    totalBookings: "إجمالي الحجوزات",
+    activeClients: "عملاء نشطون",
+    pendingBookings: "حجوزات معلقة",
+    revenue: "الإيرادات",
+    bookings: "الحجوزات",
+    recentBookings: "أحدث الحجوزات",
+    bookingsByStatus: "الحجوزات حسب الحالة",
+    monthlyRevenue: "الإيرادات الشهرية",
+    viewAll: "عرض الكل",
+    // Bookings
+    bookingDetails: "تفاصيل الحجز",
+    scheduledAt: "الموعد",
+    address: "العنوان",
+    notes: "ملاحظات",
+    totalPrice: "السعر الإجمالي",
+    assignedProvider: "مقدم الخدمة المعيّن",
+    assignProvider: "تعيين مقدم خدمة",
+    updateStatus: "تحديث الحالة",
+    noProvider: "غير معيّن",
+    // Clients
+    clientDetails: "تفاصيل العميل",
+    fullName: "الاسم الكامل",
+    phone: "الهاتف",
+    role: "الدور",
+    cars: "السيارات",
+    addresses: "العناوين",
+    block: "حظر",
+    unblock: "إلغاء الحظر",
+    blocked: "محظور",
+    active: "نشط",
+    memberSince: "عضو منذ",
+    // Services
+    addService: "إضافة خدمة",
+    editService: "تعديل خدمة",
+    nameAr: "الاسم (عربي)",
+    nameEn: "الاسم (إنجليزي)",
+    descAr: "الوصف (عربي)",
+    descEn: "الوصف (إنجليزي)",
+    basePrice: "السعر الأساسي",
+    durationMin: "المدة (دقائق)",
+    sortOrder: "الترتيب",
+    activeToggle: "مفعّل",
+    currency: "العملة",
+    // Pricing & Settings
+    pricingSettings: "التسعير والإعدادات",
+    sizeFactors: "معاملات حجم السيارة",
+    smallFactor: "صغير",
+    mediumFactor: "متوسط",
+    largeFactor: "كبير",
+    urgentSurcharge: "رسوم الاستعجال (%)",
+    serviceHours: "ساعات العمل",
+    startTime: "من",
+    endTime: "إلى",
+    settingsSaved: "تم حفظ الإعدادات",
+    // Providers
+    availability: "التوفر",
+    assignedJobs: "مهام معيّنة",
+    // Payments
+    paymentMethod: "طريقة الدفع",
+    paymentStatus: "حالة الدفع",
+    reference: "المرجع",
+    markPaid: "تحديد كمدفوع",
+    // Errors & empty
+    errorLoading: "تعذر تحميل البيانات",
+    retry: "إعادة المحاولة",
+    emptyBookings: "لا توجد حجوزات",
+    emptyClients: "لا يوجد عملاء",
+    emptyServices: "لا توجد خدمات",
+    emptyProviders: "لا يوجد مقدمو خدمة",
+    emptyPayments: "لا توجد مدفوعات",
+    confirmBlock: "هل أنت متأكد من حظر هذا المستخدم؟",
+    confirmUnblock: "هل أنت متأكد من إلغاء حظر هذا المستخدم؟",
+    userBlocked: "تم حظر المستخدم",
+    userUnblocked: "تم إلغاء حظر المستخدم",
+  },
+  en: {
+    dir: "ltr",
+    appName: "Klear",
+    appTagline: "Admin Dashboard",
+    navOverview: "Overview",
+    navBookings: "Bookings",
+    navClients: "Clients",
+    navServices: "Services & Plans",
+    navPricing: "Pricing & Settings",
+    navProviders: "Providers",
+    navPayments: "Payments",
+    loginTitle: "Sign in",
+    loginSubtitle: "Enter your email to receive a sign-in code",
+    email: "Email",
+    sendCode: "Send code",
+    enterCode: "Enter verification code",
+    codeSent: "A code was sent to your email",
+    verifying: "Verifying...",
+    signOut: "Sign out",
+    unauthorized: "Unauthorized",
+    unauthorizedMsg: "This account does not have admin privileges.",
+    invalidEmail: "Please enter a valid email",
+    authError: "Something went wrong. Please try again",
+    menu: "Menu",
+    search: "Search...",
+    theme: "Theme",
+    language: "Language",
+    account: "Account",
+    loading: "Loading...",
+    noData: "No data",
+    actions: "Actions",
+    save: "Save",
+    cancel: "Cancel",
+    edit: "Edit",
+    delete: "Delete",
+    confirm: "Confirm",
+    close: "Close",
+    status: "Status",
+    date: "Date",
+    amount: "Amount",
+    customer: "Customer",
+    provider: "Provider",
+    service: "Service",
+    all: "All",
+    searchPlaceholder: "Search...",
+    refresh: "Refresh",
+    statusPending: "Pending",
+    statusAccepted: "Accepted",
+    statusInProgress: "In progress",
+    statusCompleted: "Completed",
+    statusCancelled: "Cancelled",
+    statusPaid: "Paid",
+    statusFailed: "Failed",
+    statusRefunded: "Refunded",
+    totalRevenue: "Total revenue",
+    totalBookings: "Total bookings",
+    activeClients: "Active clients",
+    pendingBookings: "Pending bookings",
+    revenue: "Revenue",
+    bookings: "Bookings",
+    recentBookings: "Recent bookings",
+    bookingsByStatus: "Bookings by status",
+    monthlyRevenue: "Monthly revenue",
+    viewAll: "View all",
+    bookingDetails: "Booking details",
+    scheduledAt: "Scheduled",
+    address: "Address",
+    notes: "Notes",
+    totalPrice: "Total price",
+    assignedProvider: "Assigned provider",
+    assignProvider: "Assign provider",
+    updateStatus: "Update status",
+    noProvider: "Unassigned",
+    clientDetails: "Client details",
+    fullName: "Full name",
+    phone: "Phone",
+    role: "Role",
+    cars: "Cars",
+    addresses: "Addresses",
+    block: "Block",
+    unblock: "Unblock",
+    blocked: "Blocked",
+    active: "Active",
+    memberSince: "Member since",
+    addService: "Add service",
+    editService: "Edit service",
+    nameAr: "Name (Arabic)",
+    nameEn: "Name (English)",
+    descAr: "Description (Arabic)",
+    descEn: "Description (English)",
+    basePrice: "Base price",
+    durationMin: "Duration (min)",
+    sortOrder: "Sort order",
+    activeToggle: "Active",
+    currency: "Currency",
+    pricingSettings: "Pricing & Settings",
+    sizeFactors: "Car size factors",
+    smallFactor: "Small",
+    mediumFactor: "Medium",
+    largeFactor: "Large",
+    urgentSurcharge: "Urgent surcharge (%)",
+    serviceHours: "Service hours",
+    startTime: "From",
+    endTime: "To",
+    settingsSaved: "Settings saved",
+    availability: "Availability",
+    assignedJobs: "Assigned jobs",
+    paymentMethod: "Method",
+    paymentStatus: "Payment status",
+    reference: "Reference",
+    markPaid: "Mark as paid",
+    errorLoading: "Failed to load data",
+    retry: "Retry",
+    emptyBookings: "No bookings",
+    emptyClients: "No clients",
+    emptyServices: "No services",
+    emptyProviders: "No providers",
+    emptyPayments: "No payments",
+    confirmBlock: "Are you sure you want to block this user?",
+    confirmUnblock: "Are you sure you want to unblock this user?",
+    userBlocked: "User blocked",
+    userUnblocked: "User unblocked",
+  },
+} as const
+
+export type TranslationKey = keyof (typeof translations)["en"]
+
+type I18nContextValue = {
+  lang: Lang
+  dir: "rtl" | "ltr"
+  t: (key: TranslationKey) => string
+  setLang: (lang: Lang) => void
+  toggleLang: () => void
+}
+
+const I18nContext = React.createContext<I18nContextValue | undefined>(undefined)
+
+const STORAGE_KEY = "klear-admin-lang"
+
+export function I18nProvider({ children }: { children: React.ReactNode }) {
+  const [lang, setLangState] = React.useState<Lang>(() => {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    return stored === "en" || stored === "ar" ? stored : DEFAULT_LANG
+  })
+
+  const dir = translations[lang].dir
+
+  React.useEffect(() => {
+    document.documentElement.lang = lang
+    document.documentElement.dir = dir
+    localStorage.setItem(STORAGE_KEY, lang)
+  }, [lang, dir])
+
+  const setLang = React.useCallback((next: Lang) => {
+    setLangState(next)
+  }, [])
+
+  const toggleLang = React.useCallback(() => {
+    setLangState((prev) => (prev === "ar" ? "en" : "ar"))
+  }, [])
+
+  const t = React.useCallback(
+    (key: TranslationKey) => translations[lang][key],
+    [lang]
+  )
+
+  const value = React.useMemo(
+    () => ({ lang, dir, t, setLang, toggleLang }),
+    [lang, dir, t, setLang, toggleLang]
+  )
+
+  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>
+}
+
+export function useI18n() {
+  const context = React.useContext(I18nContext)
+  if (!context) {
+    throw new Error("useI18n must be used within an I18nProvider")
+  }
+  return context
+}
+
+// Format a number as currency using the active locale.
+export function formatCurrency(amount: number | null | undefined, currency = "SYP") {
+  const value = Number(amount ?? 0)
+  const lang = (localStorage.getItem(STORAGE_KEY) || "ar") as Lang
+  const locale = lang === "ar" ? "ar-SY" : "en-US"
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 0,
+    }).format(value)
+  } catch {
+    return `${value.toLocaleString(locale)} ${currency}`
+  }
+}
+
+// Format a date/time in the active locale.
+export function formatDateTime(iso: string | null | undefined) {
+  if (!iso) return "—"
+  const lang = (localStorage.getItem(STORAGE_KEY) || "ar") as Lang
+  const locale = lang === "ar" ? "ar-SY" : "en-US"
+  return new Intl.DateTimeFormat(locale, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(iso))
+}
