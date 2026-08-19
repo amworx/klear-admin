@@ -12,6 +12,7 @@ import {
   deleteClientCar,
   saveClientAddress,
   deleteClientAddress,
+  updateBooking,
 } from "@/lib/hooks/queries"
 import { useI18n, formatDateTime, formatCurrency, type TranslationKey } from "@/lib/i18n"
 import type {
@@ -19,6 +20,7 @@ import type {
   Profile,
   UserAddress,
   UserRole,
+  BookingStatus,
 } from "@/lib/types"
 import {
   PageHeader,
@@ -154,7 +156,15 @@ function CarFormFields({
             }}
           >
             <SelectTrigger className="w-full">
-              <SelectValue />
+              <SelectValue>
+                {(value) =>
+                  value === "small"
+                    ? t("sizeSmall")
+                    : value === "large"
+                      ? t("sizeLarge")
+                      : t("sizeMedium")
+                }
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {CAR_SIZES.map((size) => (
@@ -347,7 +357,9 @@ export function ClientsPage() {
                   }}
                 >
                   <TableCell>{c.full_name || "—"}</TableCell>
-                  <TableCell dir="ltr">{c.phone || "—"}</TableCell>
+                  <TableCell>
+                    {c.phone ? <span dir="ltr">{c.phone}</span> : "—"}
+                  </TableCell>
                   <TableCell>
                     {c.is_active ? (
                       <Badge variant="outline" className="text-green-600">
@@ -398,7 +410,7 @@ export function ClientsPage() {
           </DialogHeader>
           {selected ? (
             <Tabs defaultValue="profile">
-              <TabsList>
+              <TabsList className="w-full gap-1 p-1">
                 <TabsTrigger value="profile">{t("tabProfile")}</TabsTrigger>
                 <TabsTrigger value="cars">{t("tabCars")}</TabsTrigger>
                 <TabsTrigger value="addresses">{t("tabAddresses")}</TabsTrigger>
@@ -438,6 +450,7 @@ export function ClientsPage() {
                 <BookingsTab
                   bookings={clientBookings.data ?? []}
                   loading={clientBookings.isLoading}
+                  onChanged={invalidateClient}
                 />
               </TabsContent>
 
@@ -578,13 +591,19 @@ function ProfileTab({
           </div>
           <div>
             <dt className="text-muted-foreground">{t("phone")}</dt>
-            <dd className="font-medium" dir="ltr">
-              {client.phone || "—"}
+            <dd className="font-medium">
+              {client.phone ? <span dir="ltr">{client.phone}</span> : "—"}
             </dd>
           </div>
           <div>
             <dt className="text-muted-foreground">{t("role")}</dt>
-            <dd className="font-medium">{client.role}</dd>
+            <dd className="font-medium">
+              {client.role === "admin"
+                ? t("roleAdmin")
+                : client.role === "provider"
+                  ? t("roleProvider")
+                  : t("roleCustomer")}
+            </dd>
           </div>
           <div>
             <dt className="text-muted-foreground">{t("status")}</dt>
@@ -642,12 +661,20 @@ function ProfileTab({
             }}
           >
             <SelectTrigger className="w-full">
-              <SelectValue />
+              <SelectValue>
+                {(value) =>
+                  value === "admin"
+                    ? t("roleAdmin")
+                    : value === "provider"
+                      ? t("roleProvider")
+                      : t("roleCustomer")
+                }
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="customer">customer</SelectItem>
-              <SelectItem value="provider">provider</SelectItem>
-              <SelectItem value="admin">admin</SelectItem>
+              <SelectItem value="customer">{t("roleCustomer")}</SelectItem>
+              <SelectItem value="provider">{t("roleProvider")}</SelectItem>
+              <SelectItem value="admin">{t("roleAdmin")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -1055,13 +1082,31 @@ function AddressesTab({
 function BookingsTab({
   bookings,
   loading,
+  onChanged,
 }: {
   bookings: ReturnType<typeof useClientBookings> extends { data: infer D }
     ? NonNullable<D>
     : never
   loading: boolean
+  onChanged: () => Promise<void>
 }) {
   const { t, lang } = useI18n()
+  const [savingId, setSavingId] = React.useState<string | null>(null)
+
+  const changeStatus = async (bookingId: string, status: string) => {
+    setSavingId(bookingId)
+    try {
+      await updateBooking(bookingId, { status: status as BookingStatus })
+      await onChanged()
+      toast.success(t("saved"))
+    } catch (error) {
+      console.error("updateBooking error:", error)
+      toast.error(t("authError"))
+    } finally {
+      setSavingId(null)
+    }
+  }
+
   if (loading) return <Skeleton className="h-24 w-full" />
   if (bookings.length === 0) return <p className="text-sm text-muted-foreground">—</p>
   return (
@@ -1073,6 +1118,7 @@ function BookingsTab({
             <TableHead>{t("status")}</TableHead>
             <TableHead>{t("scheduledAt")}</TableHead>
             <TableHead className="text-end">{t("totalPrice")}</TableHead>
+            <TableHead className="text-end">{t("actions")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -1093,6 +1139,50 @@ function BookingsTab({
               <TableCell>{formatDateTime(b.scheduled_at)}</TableCell>
               <TableCell className="text-end">
                 {formatCurrency(b.total_price)}
+              </TableCell>
+              <TableCell className="text-end">
+                <div className="flex items-center justify-end gap-1">
+                  {b.status === "pending" ? (
+                    <Button
+                      size="sm"
+                      onClick={() => changeStatus(b.id, "accepted")}
+                      disabled={savingId === b.id}
+                    >
+                      {t("statusAccepted")}
+                    </Button>
+                  ) : null}
+                  {b.status === "accepted" ? (
+                    <Button
+                      size="sm"
+                      onClick={() => changeStatus(b.id, "in_progress")}
+                      disabled={savingId === b.id}
+                    >
+                      {t("statusInProgress")}
+                    </Button>
+                  ) : null}
+                  {b.status === "in_progress" ? (
+                    <Button
+                      size="sm"
+                      onClick={() => changeStatus(b.id, "completed")}
+                      disabled={savingId === b.id}
+                    >
+                      {t("statusCompleted")}
+                    </Button>
+                  ) : null}
+                  {b.status === "pending" ||
+                  b.status === "accepted" ||
+                  b.status === "in_progress" ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive"
+                      onClick={() => changeStatus(b.id, "cancelled")}
+                      disabled={savingId === b.id}
+                    >
+                      {t("statusCancelled")}
+                    </Button>
+                  ) : null}
+                </div>
               </TableCell>
             </TableRow>
           ))}

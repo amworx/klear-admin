@@ -88,3 +88,14 @@ Append-only. Format: EVT-YYYYMMDD-XXXX
 - **errors**: USB adb invisible device (Samsung driver OK in Device Manager but \db devices\ empty) — bypassed via wireless debugging; \db pair\ code expired once (retried immediately, port still open)
 - **lessons**: L-014
 - **tags**: install, adb, wireless-debugging, galaxy-a34
+
+## EVT-20260819-0009
+- **timestamp**: 2026-08-19
+- **mode**: BUILD
+- **action**: Admin UI polish batch (pie colors, sidebar overflow, dropdown translations, RTL buttons, client dialog)
+- **summary**: (1) Pie chart "Bookings by status" all-black: root cause = `--chart-1..5` were grayscale oklch (zero chroma) AND `STATUS_COLORS` wrapped them in invalid `hsl(...)` for oklch. Fixed index.css chart palette (light+dark shadcn standard oklch) and raw `var(--chart-N)` usage; verified computed colors dark (purple/orange) + light (yellow/orange). (2) Sidebar toggle overflow: `SidebarInset` flex child min-width auto + table nowrap min-content → 30px horizontal overflow (LTR expanded, RTL @900px). Fixed with `min-w-0` on SidebarInset; verified no overflow LTR/RTL × expanded/collapsed. (3) Booking dialog dropdowns showed raw English values ("pending"): Base UI `Select.Value` renders the raw value unless given a children function `(value) => ReactNode` — added children renderers to status filter + dialog status + provider selects (bookings) and role + car-size selects (clients); triggers `w-full`, label blocks `grid gap-1.5`. (4) Dialog/sheet close buttons moved `right-*` → `end-*` logical props for RTL (top-left in RTL). (5) Client dialog: roles translated (roleCustomer/Provider/Admin keys added), phone wrapped in `<span dir="ltr">` (was dir on cell causing start-align issues), TabsList `w-full gap-1 p-1`, BookingsTab inline status action buttons (accept/start/complete/cancel via updateBooking + onChanged=invalidateClient). Typecheck, lint, build all green.
+- **result**: SUCCESS — all UI fixes E2E-verified in dev browser (RTL Arabic + EN + dark/light)
+- **files**: src/pages/overview-page.tsx, src/index.css, src/components/ui/sidebar.tsx, src/components/ui/dialog.tsx, src/components/ui/sheet.tsx, src/pages/bookings-page.tsx, src/pages/clients-page.tsx, src/lib/i18n.tsx, memory/lessons.md
+- **errors**: one mid-edit mistake in bookings-page.tsx temporarily dropped the provider Select opener — caught by immediate re-read and restored; no lasting issue
+- **lessons**: L-019, L-020, L-021, L-022
+- **tags**: ui, rtl, charts, select, sidebar, dialogs, clients

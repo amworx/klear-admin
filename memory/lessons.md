@@ -101,3 +101,27 @@ Append-only.
 - **Root cause**: Samsung's own ADB driver can register the interface without making it visible to Google's adb server; USB path was a dead end.
 - **Fix**: use Wireless debugging — Settings → Developer options → Wireless debugging → Pair device with pairing code; then \db pair <phone-ip>:<pair-port>\ (code valid ~1 min; retry immediately), \db devices\ shows \db-<serial>._adb-tls-connect._tcp\, then \db install -r app.apk\ works over TLS. Found phone IP via the network monitor API at http://10.10.0.5:5000/api/clients.
 - **Reusable pattern**: when USB adb is broken on Windows, skip driver surgery and use Wireless debugging — it needs only a 6-digit pairing code and the phone's IP (find it via the network monitor or router). Also: verify the real applicationId (\pm list packages\) — it was \com.klear.klear\, not the assumed \com.klear.app\.
+
+## L-019 — Chart colors: `hsl(var(--chart-N))` is invalid for oklch; grayscale oklch = black (2026-08-19)
+- **Problem**: pie chart sectors rendered all black/gray despite `--chart-1..5` being defined.
+- **Root cause**: two compounding bugs: (1) the CSS vars were `oklch(0.87 0 0)`-style — zero chroma means gray regardless of hue; (2) `STATUS_COLORS` wrapped the vars in `hsl(...)` (`hsl(var(--chart-4))`), and `hsl(oklch(...))` is invalid CSS so the property silently failed.
+- **Fix**: define the standard shadcn colorful oklch chart palette in index.css (light + dark) and reference raw `var(--chart-N)` without the hsl wrapper. Verify with a computed-style probe (`getComputedStyle(probe).color`) on the resolved value, not just the class.
+- **Reusable pattern**: with Tailwind v4/shadcn oklch tokens, never wrap a var in `hsl(...)`; check chroma (`oklch(L C H)` with `C=0` is grayscale) when chart colors look monochrome.
+
+## L-020 — Base UI `Select.Value` renders the RAW value unless given children (2026-08-19)
+- **Problem**: dropdowns showed raw English values ("pending", "customer") inside the trigger even though SelectItems were translated; popup items were fine but the closed trigger was not.
+- **Root cause**: Base UI's `Select.Value` defaults to rendering the raw `value` prop of the selected item. It only renders translated/labeled content when you pass a children function: `<SelectValue>{(value) => labelFor(value)}</SelectValue>`.
+- **Fix**: add children render functions to every SelectValue that needs a display mapping (status, provider, role, car-size selects); map "all"/null sentinels explicitly.
+- **Reusable pattern**: whenever a Base UI Select needs custom display text, always pass `(value) => ReactNode` as children of `Select.Value` — verified in `node_modules/@base-ui/react/select/value/SelectValue.js`.
+
+## L-021 — Flex child with a nowrap table overflows its parent (needs `min-w-0`) (2026-08-19)
+- **Problem**: the sidebar toggle pushed content 30px past the viewport (horizontal scrollbar) in LTR expanded; in RTL at 900px the inset main column was 61px too wide.
+- **Root cause**: `SidebarInset` is a flex child with default `min-width: auto`; the services table's nowrap min-content width forced the flex item wider than the available space, overflowing the flex container.
+- **Fix**: add `min-w-0` to the SidebarInset className — the flex item can then shrink and the table's own `overflow-x-auto` takes over (scrolls internally instead of overflowing the page).
+- **Reusable pattern**: any flex child containing wide content (tables, long nowrap text) needs `min-w-0` (or `min-h-0` vertically) to participate in flex shrinking; verify via `scrollWidth <= clientWidth`.
+
+## L-022 — RTL absolute-positioned close buttons need `end-*` logical props (2026-08-19)
+- **Problem**: dialog/sheet close buttons sat on the wrong side in Arabic RTL (top-right instead of top-left, crowding the title which starts right).
+- **Root cause**: shadcn dialogs use physical `right-2`/`right-3` positioning; in RTL the visual start is the right edge, so a right-anchored button collides with the header.
+- **Fix**: switch to logical properties `end-2`/`end-3` (Tailwind v4 supports `end-*` = inset-inline-end).
+- **Reusable pattern**: for RTL-first apps, use logical inset utilities (`start-*`/`end-*`) for absolutely-positioned controls near text edges; audit existing shadcn components for physical `right-*`/`left-*`.

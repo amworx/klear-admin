@@ -138,7 +138,13 @@ export function BookingsPage() {
         </div>
         <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "all")}>
           <SelectTrigger className="w-full sm:w-44">
-            <SelectValue placeholder={t("status")} />
+            <SelectValue placeholder={t("status")}>
+              {(value) =>
+                value === "all" || value === null
+                  ? t("all")
+                  : statusLabel[String(value)] ?? t("status")
+              }
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t("all")}</SelectItem>
@@ -253,14 +259,16 @@ export function BookingsPage() {
                 </div>
               </dl>
 
-              <div className="space-y-2">
+              <div className="grid gap-1.5">
                 <label className="text-sm font-medium">{t("updateStatus")}</label>
                 <Select
                   value={newStatus}
                   onValueChange={(v) => v && setNewStatus(v as BookingStatus)}
                 >
-                  <SelectTrigger>
-                    <SelectValue />
+                  <SelectTrigger className="w-full">
+                    <SelectValue>
+                      {(value) => statusLabel[String(value)] ?? t("status")}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {STATUS_OPTIONS.map((s) => (
@@ -272,13 +280,20 @@ export function BookingsPage() {
                 </Select>
               </div>
 
-              <div className="space-y-2">
+              <div className="grid gap-1.5">
                 <label className="text-sm font-medium">
                   {t("assignedProvider")}
                 </label>
                 <Select value={newProvider} onValueChange={(v) => setNewProvider(v ?? "none")}>
-                  <SelectTrigger>
-                    <SelectValue />
+                  <SelectTrigger className="w-full">
+                    <SelectValue>
+                      {(value) => {
+                        const v = String(value ?? "none")
+                        if (v === "none" || !v) return t("noProvider")
+                        const p = (providers.data ?? []).find((p) => p.id === v)
+                        return p ? p.full_name || p.phone || p.id : t("noProvider")
+                      }}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">{t("noProvider")}</SelectItem>

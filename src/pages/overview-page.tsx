@@ -51,11 +51,11 @@ import {
 } from "lucide-react"
 
 const STATUS_COLORS: Record<string, string> = {
-  pending: "hsl(var(--chart-4))",
-  accepted: "hsl(var(--chart-3))",
-  in_progress: "hsl(var(--chart-2))",
-  completed: "hsl(var(--chart-1))",
-  cancelled: "hsl(var(--muted-foreground))",
+  pending: "var(--chart-4)",
+  accepted: "var(--chart-3)",
+  in_progress: "var(--chart-2)",
+  completed: "var(--chart-1)",
+  cancelled: "var(--chart-5)",
 }
 
 export function OverviewPage() {
@@ -201,7 +201,7 @@ export function OverviewPage() {
                             Object.keys(stats.data?.bookingsByStatus ?? {})[
                               index
                             ]
-                          ] ?? "hsl(var(--chart-1))"
+                          ] ?? "var(--chart-1)"
                         }
                       />
                     ))}
