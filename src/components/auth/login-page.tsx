@@ -1,4 +1,5 @@
 import * as React from "react"
+import { useNavigate } from "react-router-dom"
 import { supabase } from "@/lib/supabase"
 import { useI18n } from "@/lib/i18n"
 import { Button } from "@/components/ui/button"
@@ -17,6 +18,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function LoginPage() {
   const { t } = useI18n()
+  const navigate = useNavigate()
   const [step, setStep] = React.useState<"email" | "otp">("email")
   const [email, setEmail] = React.useState("")
   const [otp, setOtp] = React.useState("")
@@ -46,7 +48,7 @@ export function LoginPage() {
 
   const verifyCode = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (otp.length < 6) return
+    if (otp.length < 8) return
     setVerifying(true)
     const { error } = await supabase.auth.verifyOtp({
       email: email.trim(),
@@ -57,8 +59,10 @@ export function LoginPage() {
     if (error) {
       console.error("verifyOtp error:", error.message)
       toast.error(t("authError"))
+      return
     }
-    // On success, onAuthStateChange in AuthProvider picks up the session.
+    // Redirect on success; AuthProvider's onAuthStateChange also refreshes state.
+    navigate("/", { replace: true })
   }
 
   return (
@@ -108,17 +112,16 @@ export function LoginPage() {
                 <div className="flex justify-center py-2">
                   <InputOTP
                     id="otp"
-                    maxLength={6}
+                    maxLength={8}
                     value={otp}
                     onChange={setOtp}
-                    render={({ slots }) => (
-                      <InputOTPGroup>
-                        {slots.map((slot, index) => (
-                          <InputOTPSlot key={index} index={index} {...slot} />
-                        ))}
-                      </InputOTPGroup>
-                    )}
-                  />
+                  >
+                    <InputOTPGroup>
+                      {Array.from({ length: 8 }).map((_, index) => (
+                        <InputOTPSlot key={index} index={index} />
+                      ))}
+                    </InputOTPGroup>
+                  </InputOTP>
                 </div>
                 <p className="text-center text-sm text-muted-foreground">
                   {email.trim()}
