@@ -66,6 +66,22 @@ Append-only. Format: EVT-YYYYMMDD-XXXX
 - **errors**: `otp_expired` on 6-digit attempts (field was truncating 8-digit codes); first code attempt invalidated by re-requesting OTP
 - **lessons**: L-015, L-016, L-017
 - **tags**: login, black-screen, input-otp, base-ui, otp-length, admin-email, deploy
+
+## EVT-20260819-0008
+- **timestamp**: 2026-08-19
+- **mode**: BUILD
+- **action**: Fix OTP UI (RTL) + login redirect race; end-to-end login verified
+- **summary**: (1) OTP screen "broken" look = physical border/radius classes on `InputOTPSlot` (`first:border-l first:rounded-l-lg last:rounded-r-lg border-r`) which land on the wrong side in `dir=rtl` — outer edge open, inner corners rounded. Fixed with logical props (`border-e`, `first:border-s first:rounded-s-lg last:rounded-e-lg`); verified getComputedStyle on production (first slot right border+radiusTR, last slot left border+radiusTL). (2) "Cannot login" root cause = redirect race: after `verifyOtp` 200 the old code called `navigate("/")` while AuthContext was still `signedOut` (profile fetch is async), so ProtectedRoute bounced back to `/login`, which renders regardless of auth state → user saw login page again and thought login failed. Fixed by making LoginPage redirect from auth **state** (`useEffect` on `status === "signedIn"` → navigate `/`), which also auto-redirects reloads at `/login` with a stored session. (3) User logged in manually on production; server-side confirmed: `auth.sessions` has active aal1 session for user 1e3a4bad created 18:03:28. Commits `301859c` (RTL) + `8ca71c0` (redirect race) pushed; production redeployed (prebuilt, aliased klear-admin.vercel.app).
+- **result**: SUCCESS — full email→OTP→dashboard flow verified on production; user logged in
+- **files**: src/components/ui/input-otp.tsx, src/components/auth/login-page.tsx, memory/lessons.md
+- **errors**: none
+- **lessons**: L-018 (OTP RTL logical props)
+- **tags**: login, otp, rtl, redirect-race, production, verify
+
+## EVT-20260818-0006
+- **timestamp**: 2026-08-18
+- **mode**: BUILD
+- **action**: Install Klear app on Galaxy A34 5G (wireless debugging)
 - **summary**: USB adb failed (Samsung ADB interface present but adb saw nothing; USB driver issue, dl.google.com unreachable for the Google USB driver). Phone was also on WiFi (10.10.0.18, Galaxy-A34-5G). User enabled Wireless debugging + pairing code 568650, port 42281. \db pair 10.10.0.18:42281\ succeeded (guid adb-RFCWA0BJT9F), then \db install -r app-debug.apk\ succeeded. App package is \com.klear.klear\ (NOT com.klear.app); launched via monkey and verified mCurrentFocus=com.klear.klear/.MainActivity. Cleaned up stray APK copies on the Huawei phone (10.10.0.5).
 - **result**: SUCCESS — Klear installed + running on Galaxy A34 5G
 - **files**: C:\Users\HP\Documents\code_repo\android\klear\src\build\app\outputs\flutter-apk\app-debug.apk
