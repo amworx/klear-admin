@@ -2,6 +2,7 @@ import * as React from "react"
 import { useNavigate } from "react-router-dom"
 import { supabase } from "@/lib/supabase"
 import { useI18n } from "@/lib/i18n"
+import { useAuth } from "@/lib/hooks/use-auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -19,12 +20,22 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 export function LoginPage() {
   const { t } = useI18n()
   const navigate = useNavigate()
+  const { status } = useAuth()
   const [step, setStep] = React.useState<"email" | "otp">("email")
   const [email, setEmail] = React.useState("")
   const [otp, setOtp] = React.useState("")
   const [sending, setSending] = React.useState(false)
   const [verifying, setVerifying] = React.useState(false)
   const [emailError, setEmailError] = React.useState<string | null>(null)
+
+  // Redirect as soon as auth state becomes signedIn. This covers both the
+  // post-verifyOtp race (profile fetch is async, so navigate() alone bounces
+  // back through ProtectedRoute) and reloading /login with a stored session.
+  React.useEffect(() => {
+    if (status === "signedIn") {
+      navigate("/", { replace: true })
+    }
+  }, [status, navigate])
 
   const sendCode = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -59,10 +70,8 @@ export function LoginPage() {
     if (error) {
       console.error("verifyOtp error:", error.message)
       toast.error(t("authError"))
-      return
     }
-    // Redirect on success; AuthProvider's onAuthStateChange also refreshes state.
-    navigate("/", { replace: true })
+    // On success the useAuth effect above redirects once state is signedIn.
   }
 
   return (

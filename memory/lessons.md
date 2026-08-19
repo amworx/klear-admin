@@ -91,6 +91,12 @@ Append-only.
 - **Root cause**: this project's Supabase auth config has `"mailer_otp_length": 8` (8-digit codes), but the login UI had `maxLength={6}` → the code was silently truncated to 6 digits before being sent.
 - **Fix**: read `GET /v1/projects/<ref>/config/auth` via the Management API to learn the configured OTP length, then set InputOTP `maxLength` + verify guard to 8.
 - **Reusable pattern**: never assume 6-digit OTPs. Check the auth config (`mailer_otp_length`, `sms_otp_length`) before building the OTP input; match slot count and validation to the configured length.
+
+## L-018 — InputOTP slot borders/rounding need logical properties for RTL (2026-08-19)
+- **Problem**: the 8-slot OTP screen looked broken (open outer edge, rounded inner corners) in the default Arabic RTL UI.
+- **Root cause**: shadcn's `input-otp.tsx` used physical classes (`first:border-l first:rounded-l-lg last:rounded-r-lg border-r`). In `dir=rtl` the flex row is mirrored, so physical left/right land on the wrong side — the group's outer edge is unclosed and the corners round the wrong way.
+- **Fix**: switch to logical properties: `border-e` on slots, `first:border-s first:rounded-s-lg last:rounded-e-lg`. Verified via getComputedStyle: first slot (rightmost in RTL) now has borderRight+radiusTR, last slot borderLeft+radiusTL.
+- **Reusable pattern**: any shadcn/base-nova component with physical start/end borders or radii (border-l/r, rounded-l/r) must use `-s`/`-e` logical variants when the app is RTL-first. Verify with getComputedStyle on first/last elements, not just class names.
 - **Problem**: Galaxy A34 5G showed a healthy \ADB Interface\ in Device Manager (Status OK) but \db devices\ returned empty after many server restarts; dl.google.com was unreachable so the Google USB driver couldn't be (re)installed.
 - **Root cause**: Samsung's own ADB driver can register the interface without making it visible to Google's adb server; USB path was a dead end.
 - **Fix**: use Wireless debugging — Settings → Developer options → Wireless debugging → Pair device with pairing code; then \db pair <phone-ip>:<pair-port>\ (code valid ~1 min; retry immediately), \db devices\ shows \db-<serial>._adb-tls-connect._tcp\, then \db install -r app.apk\ works over TLS. Found phone IP via the network monitor API at http://10.10.0.5:5000/api/clients.
