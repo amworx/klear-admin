@@ -74,7 +74,23 @@ Append-only.
 - **Fix**: add \{"rewrites":[{"source":"/(.*)","destination":"/index.html"}]}\ to vercel.json, rebuild with \ercel build --prod\, restage, redeploy — config.json then contains the \dest: /index.html\ route.
 - **Reusable pattern**: when manually deploying prebuilt Vite SPAs, always include vercel.json rewrites and verify config.json contains the SPA fallback route before deploying. Also: stage project.json INSIDE .vercel/ in the temp deploy dir (a stale project.json at the root caused a spurious "klear-deploy" project creation).
 
-## L-014 — Wireless debugging is the reliable install path when USB adb is blind (2026-08-18)
+## L-015 — Base UI 1.7 `Menu.GroupLabel` requires a `Menu.Group` ancestor (2026-08-19)
+- **Problem**: opening the Topbar user dropdown crashed the whole app with `Uncaught Error: Base UI: MenuGroupContext is missing` and rendered a black/empty page (React unmounts the tree on uncaught render errors).
+- **Root cause**: shadcn's `DropdownMenuLabel` maps to `Menu.GroupLabel`, which calls `useMenuGroupRootContext()`; in @base-ui/react 1.7 that context only exists inside `Menu.Group`/`Menu.RadioGroup`.
+- **Fix**: wrap the label in `<DropdownMenuGroup>` (which maps to `Menu.Group`).
+- **Reusable pattern**: with base-ui 1.7+, any `DropdownMenuLabel` must be inside `DropdownMenuGroup`; a bare label throws at render time. Grep for `DropdownMenuLabel` usages whenever upgrading base-ui.
+
+## L-016 — input-otp: use the children pattern, not the `render` prop (2026-08-19)
+- **Problem**: the OTP step (shown after entering the email) crashed with `Cannot read properties of undefined (reading '0')` and produced a black window.
+- **Root cause**: login-page used `<InputOTP render={({slots}) => ...}>`; input-otp@1.5.0 only wraps children in `OTPInputContext.Provider` — the `render` prop path bypasses the Provider, so `InputOTPSlot` (which reads `useContext(OTPInputContext)?.slots[index]`) got `{}` and `slots` was undefined.
+- **Fix**: use children mode: `<InputOTP maxLength={n} value={...} onChange={...}><InputOTPGroup>{Array.from({length:n}).map((_,i)=><InputOTPSlot key={i} index={i}/>)}</InputOTPGroup></InputOTP>`.
+- **Reusable pattern**: with shadcn/base-nova `input-otp.tsx`, always pass children (`InputOTPGroup` + `InputOTPSlot index=`) and never the `render` prop — the shadcn wrapper's slots read context, which only the children path provides.
+
+## L-017 — Supabase mailer OTP length is configurable; don't hardcode 6 (2026-08-19)
+- **Problem**: every OTP verify returned `otp_expired` even with the exact code from the email.
+- **Root cause**: this project's Supabase auth config has `"mailer_otp_length": 8` (8-digit codes), but the login UI had `maxLength={6}` → the code was silently truncated to 6 digits before being sent.
+- **Fix**: read `GET /v1/projects/<ref>/config/auth` via the Management API to learn the configured OTP length, then set InputOTP `maxLength` + verify guard to 8.
+- **Reusable pattern**: never assume 6-digit OTPs. Check the auth config (`mailer_otp_length`, `sms_otp_length`) before building the OTP input; match slot count and validation to the configured length.
 - **Problem**: Galaxy A34 5G showed a healthy \ADB Interface\ in Device Manager (Status OK) but \db devices\ returned empty after many server restarts; dl.google.com was unreachable so the Google USB driver couldn't be (re)installed.
 - **Root cause**: Samsung's own ADB driver can register the interface without making it visible to Google's adb server; USB path was a dead end.
 - **Fix**: use Wireless debugging — Settings → Developer options → Wireless debugging → Pair device with pairing code; then \db pair <phone-ip>:<pair-port>\ (code valid ~1 min; retry immediately), \db devices\ shows \db-<serial>._adb-tls-connect._tcp\, then \db install -r app.apk\ works over TLS. Found phone IP via the network monitor API at http://10.10.0.5:5000/api/clients.

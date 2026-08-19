@@ -56,10 +56,16 @@ Append-only. Format: EVT-YYYYMMDD-XXXX
 - **lessons**: L-012, L-013
 - **tags**: switch, rtl, edge-function, add-user, deploy, vercel, spa-rewrite
 
-## EVT-20260818-0006
-- **timestamp**: 2026-08-18
+## EVT-20260819-0007
+- **timestamp**: 2026-08-19
 - **mode**: BUILD
-- **action**: Install Klear app on Galaxy A34 5G (wireless debugging)
+- **action**: Fix login black screen (2 crashes) + wrong admin email in docs + OTP length
+- **summary**: (1) Black window after entering email = TWO separate React crashes. Crash A: `MenuGroupContext is missing` — Base UI 1.7 `Menu.GroupLabel` must live inside `Menu.Group`; the Topbar user dropdown used `DropdownMenuLabel` bare → app-shell.tsx now wraps it in `DropdownMenuGroup`. Crash B: `Cannot read properties of undefined (reading '0')` in `InputOTPSlot` — login-page.tsx used the `render` prop API, but input-otp@1.5.0 only populates `OTPInputContext` in children mode; switched to the children pattern. (2) OTP codes are 8 digits (`mailer_otp_length: 8`), but InputOTP was `maxLength={6}` → any code was truncated and rejected; bumped to 8 slots/guard. (3) Added `navigate("/")` after successful verifyOtp (previously user was stranded on /login). (4) Admin email: auth.users ALREADY has `amworxx@gmail.com` for user 1e3a4bad (confirmed) — credentials.md was wrong; the `amworx@gmail.com` row (73f7a0c5, unconfirmed, no profile) was a signInWithOtp auto-created stray and was deleted via Management API SQL. Verified: full email→OTP→dashboard flow in dev (code 74278606 accepted, verify 200) and on production (8 OTP slots render, no crash). Committed `d729db1`, pushed, deployed prebuilt to https://klear-admin.vercel.app.
+- **result**: SUCCESS — login works end-to-end on dev + production
+- **files**: src/components/auth/login-page.tsx, src/components/layout/app-shell.tsx, memory/credentials.md (admin email corrected)
+- **errors**: `otp_expired` on 6-digit attempts (field was truncating 8-digit codes); first code attempt invalidated by re-requesting OTP
+- **lessons**: L-015, L-016, L-017
+- **tags**: login, black-screen, input-otp, base-ui, otp-length, admin-email, deploy
 - **summary**: USB adb failed (Samsung ADB interface present but adb saw nothing; USB driver issue, dl.google.com unreachable for the Google USB driver). Phone was also on WiFi (10.10.0.18, Galaxy-A34-5G). User enabled Wireless debugging + pairing code 568650, port 42281. \db pair 10.10.0.18:42281\ succeeded (guid adb-RFCWA0BJT9F), then \db install -r app-debug.apk\ succeeded. App package is \com.klear.klear\ (NOT com.klear.app); launched via monkey and verified mCurrentFocus=com.klear.klear/.MainActivity. Cleaned up stray APK copies on the Huawei phone (10.10.0.5).
 - **result**: SUCCESS — Klear installed + running on Galaxy A34 5G
 - **files**: C:\Users\HP\Documents\code_repo\android\klear\src\build\app\outputs\flutter-apk\app-debug.apk
