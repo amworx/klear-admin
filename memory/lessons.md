@@ -125,3 +125,14 @@ Append-only.
 - **Root cause**: shadcn dialogs use physical `right-2`/`right-3` positioning; in RTL the visual start is the right edge, so a right-anchored button collides with the header.
 - **Fix**: switch to logical properties `end-2`/`end-3` (Tailwind v4 supports `end-*` = inset-inline-end).
 - **Reusable pattern**: for RTL-first apps, use logical inset utilities (`start-*`/`end-*`) for absolutely-positioned controls near text edges; audit existing shadcn components for physical `right-*`/`left-*`.
+
+## L-023 — Clearing React controlled inputs in browser E2E (2026-08-23)
+**Problem**: chrome-devtools fill(uid, "") emptied a React-controlled <input type=number> visually but React state kept the old value (saved stale data once).
+**Root cause**: programmatic value set without a proper input event does not update React state; a later re-render can reset the visible value.
+**Fix/rule**: to clear an input in E2E: click it, press Ctrl+A then Delete (real key events), or use evaluate_script with native setter + dispatched InputEvent. Verify state-coupled UI (or DB) before asserting.
+**Scope**: any React/Vite app testing, not just this project.
+
+## L-024 — P-001 session bootstrap on Windows PS 5.1 (2026-08-23)
+**Problem**: curl.exe with inline JSON (-d '{...}') or --data-binary "@file" both returned bad_json from Supabase under PS 5.1 quoting rules.
+**Fix**: use a small node script with global fetch (see Temp/opencode/e2e_session.js pattern): generate_link (service key) -> verify (anon key) -> write at/rt files -> build hash URL -> navigate.
+**Rule**: on this Windows box, prefer node fetch over curl.exe for JSON POST bodies in all auth/session tooling.

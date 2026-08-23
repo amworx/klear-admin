@@ -380,6 +380,19 @@ export function useProviders() {
   })
 }
 
+// Toggles whether a provider counts toward booking capacity (the client's
+// availability RPC only counts providers with is_available = true).
+export async function setProviderAvailable(
+  providerId: string,
+  isAvailable: boolean
+): Promise<void> {
+  const { error } = await supabase
+    .from("profiles")
+    .update({ is_available: isAvailable })
+    .eq("id", providerId)
+  if (error) throw error
+}
+
 export function useProviderJobCounts() {
   return useQuery({
     queryKey: ["provider-job-counts"],

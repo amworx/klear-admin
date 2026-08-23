@@ -1,4 +1,9 @@
-import { useProviders, useProviderJobCounts } from "@/lib/hooks/queries"
+import { useQueryClient } from "@tanstack/react-query"
+import {
+  useProviders,
+  useProviderJobCounts,
+  setProviderAvailable,
+} from "@/lib/hooks/queries"
 import { useI18n, formatDateTime } from "@/lib/i18n"
 import {
   PageHeader,
@@ -22,18 +27,37 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Switch } from "@/components/ui/switch"
+import { toast } from "sonner"
 import {
   AddUserDialog,
   AddUserTrigger,
 } from "@/components/add-user-dialog"
 import { Briefcase, CircleDot, Truck } from "lucide-react"
+import * as React from "react"
 
 export function ProvidersPage() {
   const { t } = useI18n()
+  const queryClient = useQueryClient()
   const providers = useProviders()
   const jobCounts = useProviderJobCounts()
+  const [togglingId, setTogglingId] = React.useState<string | null>(null)
 
   const activeCount = (providers.data ?? []).filter((p) => p.is_available).length
+
+  const toggleAvailability = async (id: string, value: boolean) => {
+    setTogglingId(id)
+    try {
+      await setProviderAvailable(id, value)
+      await queryClient.invalidateQueries({ queryKey: ["providers"] })
+      toast.success(t("saved"))
+    } catch (error) {
+      console.error("setProviderAvailable error:", error)
+      toast.error(t("authError"))
+    } finally {
+      setTogglingId(null)
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -83,6 +107,7 @@ export function ProvidersPage() {
                   <TableHead>{t("fullName")}</TableHead>
                   <TableHead>{t("phone")}</TableHead>
                   <TableHead>{t("availability")}</TableHead>
+                  <TableHead>{t("availabilityToggle")}</TableHead>
                   <TableHead>{t("assignedJobs")}</TableHead>
                   <TableHead>{t("memberSince")}</TableHead>
                 </TableRow>
@@ -102,6 +127,14 @@ export function ProvidersPage() {
                         ) : (
                           <Badge variant="secondary">{t("blocked")}</Badge>
                         )}
+                      </TableCell>
+                      <TableCell>
+                        <Switch
+                          checked={p.is_available}
+                          disabled={togglingId === p.id}
+                          onCheckedChange={(v) => toggleAvailability(p.id, v)}
+                          aria-label={t("availabilityToggle")}
+                        />
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">

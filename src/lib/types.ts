@@ -25,6 +25,8 @@ export type BookingStatus =
 
 export type BookingTimeType = "all_day" | "window" | "urgent"
 
+export type ServiceBadgeKey = "popular" | "new" | "best_value"
+
 export type Service = {
   id: string
   name_ar: string
@@ -36,6 +38,10 @@ export type Service = {
   is_active: boolean
   sort: number
   duration_min: number | null
+  /** Merchandising discount percent (1-90), null = no discount. */
+  discount_percent: number | null
+  /** Admin-set merchandising badge shown on the client catalog. */
+  badge_key: ServiceBadgeKey | null
 }
 
 export type Booking = {

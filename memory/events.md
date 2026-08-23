@@ -99,3 +99,14 @@ Append-only. Format: EVT-YYYYMMDD-XXXX
 - **errors**: one mid-edit mistake in bookings-page.tsx temporarily dropped the provider Select opener — caught by immediate re-read and restored; no lasting issue
 - **lessons**: L-019, L-020, L-021, L-022
 - **tags**: ui, rtl, charts, select, sidebar, dialogs, clients
+
+## EVT-20260823-0001
+- **timestamp**: 2026-08-23
+- **mode**: BUILD
+- **action**: Service merchandising editors (badge/discount) + provider availability switch (T1/T2 admin scope)
+- **summary**: (1) types.ts: added ServiceBadgeKey union ("popular"|"new"|"best_value") + discount_percent/badge_key to Service. (2) services-page.tsx: edit dialog gained discount number input (min 1 max 90, empty=none) + badge Select (none/3 keys); save validates 1-90 range and maps "none"->null; table shows badge chip + "-N%" columns. (3) queries.ts: setProviderAvailable(providerId, isAvailable) PATCH on profiles.is_available (drives client capacity count). (4) providers-page.tsx: availability Switch column + stat reactivity; i18n keys (ar+en): discountPercent/badgeKey/badgeNone/Popular/New/BestValue/availabilityToggle. Gates: typecheck+lint+build green. E2E via P-001 session (node fetch variant): dialog prefill round-trip, set popular/20 -> DB verified, clear both -> null/null DB verified; provider created via AddUserDialog edge function, switch ON/OFF -> is_available true/false DB verified; test provider cleaned up (auth user deleted, profile removed).
+- **result**: SUCCESS
+- **files**: src/lib/types.ts, src/lib/i18n.tsx, src/lib/hooks/queries.ts, src/pages/services-page.tsx, src/pages/providers-page.tsx
+- **errors**: fill("") on React controlled number input showed DOM cleared but React state kept old value -> saved stale 20; real keyboard events (Ctrl+A, Delete) work. Also PS 5.1 mangles inline JSON for curl (-d / --data-binary @file both failed with bad_json); node fetch used instead.
+- **lessons**: L-023 (React input clearing in E2E), L-024 (P-001 node variant)
+- **tags**: services, merchandising, badge, discount, providers, availability, e2e

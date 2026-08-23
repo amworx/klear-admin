@@ -44,8 +44,16 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { toast } from "sonner"
 import { Pencil, Plus, Trash2 } from "lucide-react"
+import type { ServiceBadgeKey } from "@/lib/types"
 
 type ServiceForm = {
   name_ar: string
@@ -57,6 +65,8 @@ type ServiceForm = {
   sort: string
   is_active: boolean
   currency: string
+  discount_percent: string
+  badge_key: ServiceBadgeKey | "none"
 }
 
 const EMPTY_FORM: ServiceForm = {
@@ -69,7 +79,18 @@ const EMPTY_FORM: ServiceForm = {
   sort: "0",
   is_active: true,
   currency: "SYP",
+  discount_percent: "",
+  badge_key: "none",
 }
+
+const BADGE_KEYS: {
+  value: ServiceBadgeKey
+  labelKey: "badgePopular" | "badgeNew" | "badgeBestValue"
+}[] = [
+  { value: "popular", labelKey: "badgePopular" },
+  { value: "new", labelKey: "badgeNew" },
+  { value: "best_value", labelKey: "badgeBestValue" },
+]
 
 export function ServicesPage() {
   const { t, lang } = useI18n()
@@ -101,6 +122,9 @@ export function ServicesPage() {
       sort: String(s.sort),
       is_active: s.is_active,
       currency: s.currency,
+      discount_percent:
+        s.discount_percent != null ? String(s.discount_percent) : "",
+      badge_key: (s.badge_key as ServiceBadgeKey | null) ?? "none",
     })
     setFormOpen(true)
   }
@@ -108,6 +132,13 @@ export function ServicesPage() {
   const save = async () => {
     if (!form.name_ar.trim() || !form.name_en.trim()) {
       toast.error(t("authError"))
+      return
+    }
+    const discount = form.discount_percent.trim()
+      ? Number(form.discount_percent)
+      : null
+    if (discount != null && (!Number.isFinite(discount) || discount < 1 || discount > 90)) {
+      toast.error(t("discountPercent"))
       return
     }
     setSaving(true)
@@ -123,6 +154,8 @@ export function ServicesPage() {
         sort: Number(form.sort) || 0,
         is_active: form.is_active,
         currency: form.currency.trim() || "SYP",
+        discount_percent: discount,
+        badge_key: form.badge_key === "none" ? null : form.badge_key,
       })
       await queryClient.invalidateQueries({ queryKey: ["services"] })
       toast.success(t("save"))
@@ -186,6 +219,8 @@ export function ServicesPage() {
                 <TableHead>{t("nameEn")}</TableHead>
                 <TableHead>{t("basePrice")}</TableHead>
                 <TableHead>{t("durationMin")}</TableHead>
+                <TableHead>{t("badgeKey")}</TableHead>
+                <TableHead>{t("discountPercent")}</TableHead>
                 <TableHead>{t("sortOrder")}</TableHead>
                 <TableHead>{t("activeToggle")}</TableHead>
                 <TableHead className="text-end">{t("actions")}</TableHead>
@@ -198,6 +233,23 @@ export function ServicesPage() {
                   <TableCell>{s.name_en}</TableCell>
                   <TableCell>{formatCurrency(s.base_price, s.currency)}</TableCell>
                   <TableCell>{s.duration_min ?? "—"}</TableCell>
+                  <TableCell>
+                    {s.badge_key ? (
+                      <Badge variant="outline">
+                        {t(
+                          BADGE_KEYS.find((b) => b.value === s.badge_key)
+                            ?.labelKey ?? "badgeNone"
+                        )}
+                      </Badge>
+                    ) : (
+                      "—"
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {s.discount_percent != null
+                      ? `-${s.discount_percent}%`
+                      : "—"}
+                  </TableCell>
                   <TableCell>{s.sort}</TableCell>
                   <TableCell>
                     {s.is_active ? (
@@ -310,6 +362,43 @@ export function ServicesPage() {
                   value={form.sort}
                   onChange={(e) => set("sort", e.target.value)}
                 />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-2">
+                <Label htmlFor="discount_percent">
+                  {t("discountPercent")}
+                </Label>
+                <Input
+                  id="discount_percent"
+                  type="number"
+                  min={1}
+                  max={90}
+                  value={form.discount_percent}
+                  onChange={(e) => set("discount_percent", e.target.value)}
+                  placeholder="15"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="badge_key">{t("badgeKey")}</Label>
+                <Select
+                  value={form.badge_key}
+                  onValueChange={(v) =>
+                    set("badge_key", v as ServiceForm["badge_key"])
+                  }
+                >
+                  <SelectTrigger id="badge_key" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">{t("badgeNone")}</SelectItem>
+                    {BADGE_KEYS.map((b) => (
+                      <SelectItem key={b.value} value={b.value}>
+                        {t(b.labelKey)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div className="flex items-center justify-between">
