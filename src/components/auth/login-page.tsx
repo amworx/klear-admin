@@ -118,7 +118,7 @@ export function LoginPage() {
             <form onSubmit={verifyCode} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="otp">{t("enterCode")}</Label>
-                <div className="flex justify-center py-2">
+                <div className="flex justify-center py-2" dir="ltr">
                   <InputOTP
                     id="otp"
                     maxLength={8}
