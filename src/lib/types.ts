@@ -89,6 +89,51 @@ export type Car = {
   created_at: string
 }
 
+export type CarAttrDataType = "text" | "select"
+
+/** One option of a `select` car attribute. Carries an optional price factor
+ *  (used when the attribute `affects_price`). */
+export type CarAttributeOption = {
+  value: string
+  label_ar: string
+  label_en: string
+  /** Numeric factor applied to the service base price when this option is set
+   *  (only meaningful when the parent attribute `affects_price` is true). */
+  factor?: number
+}
+
+/** An admin-managed car attribute (the catalog). Maps onto
+ *  `car_attributes` in the Klear Supabase schema. */
+export type CarAttribute = {
+  id: string
+  /** Stable lookup key. System attributes use make/model/plate_number/size. */
+  key: string
+  label_ar: string
+  label_en: string
+  data_type: CarAttrDataType
+  options: CarAttributeOption[]
+  /** Whether this attribute is a pricing driver (multiplies the base price). */
+  affects_price: boolean
+  /** Numeric factor for `text` attributes (or fallback). */
+  price_factor: number
+  sort_order: number
+  is_visible: boolean
+  is_required: boolean
+  /** Locked built-ins (make/model/plate_number/size) — cannot be deleted. */
+  is_system: boolean
+  created_at: string
+}
+
+/** A per-car value for an attribute (`car_attribute_values`). */
+export type CarAttributeValue = {
+  id: string
+  car_id: string
+  attribute_id: string
+  value: string
+  created_at: string
+  updated_at: string
+}
+
 export type UserAddress = {
   id: string
   user_id: string

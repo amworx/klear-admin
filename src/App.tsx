@@ -13,6 +13,7 @@ import { ClientsPage } from "@/pages/clients-page"
 import { ServicesPage } from "@/pages/services-page"
 import { PricingPage } from "@/pages/pricing-page"
 import { ProvidersPage } from "@/pages/providers-page"
+import { CarAttributesPage } from "@/pages/car-attributes-page"
 import { PaymentsPage } from "@/pages/payments-page"
 import { LiveOpsPage } from "@/pages/live-ops-page"
 import { CalendarPage } from "@/pages/calendar-page"
@@ -52,6 +53,7 @@ export function App() {
           <Route path="/clients" element={<ClientsPage />} />
           <Route path="/services" element={<ServicesPage />} />
           <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/car-attributes" element={<CarAttributesPage />} />
           <Route path="/providers" element={<ProvidersPage />} />
           <Route path="/payments" element={<PaymentsPage />} />
           <Route path="/live-ops" element={<LiveOpsPage />} />

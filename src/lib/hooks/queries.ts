@@ -7,6 +7,9 @@ import type {
   BookingWithRelations,
   CaptainLocation,
   Car,
+  CarAttribute,
+  CarAttributeOption,
+  CarAttributeValue,
   Payment,
   Profile,
   Service,
@@ -315,6 +318,107 @@ export async function deleteClientAddress(id: string): Promise<void> {
   if (error) throw error
 }
 
+// ---------- Car attributes (dynamic catalog) ----------
+
+/** The admin-managed car-attribute catalog, ordered for display. */
+export function useCarAttributes() {
+  return useQuery({
+    queryKey: ["car-attributes"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("car_attributes")
+        .select("*")
+        .order("sort_order", { ascending: true })
+      if (error) throw error
+      return (data ?? []) as CarAttribute[]
+    },
+  })
+}
+
+/** All values for a single car, keyed by attribute id for easy lookup. */
+export function useCarAttributeValues(carId: string | undefined) {
+  return useQuery({
+    queryKey: ["car-attribute-values", carId],
+    queryFn: async () => {
+      if (!carId) return []
+      const { data, error } = await supabase
+        .from("car_attribute_values")
+        .select("*")
+        .eq("car_id", carId)
+      if (error) throw error
+      return (data ?? []) as CarAttributeValue[]
+    },
+    enabled: !!carId,
+  })
+}
+
+/** Create or update a catalog attribute. */
+export async function upsertCarAttribute(
+  patch: Partial<CarAttribute> & { key: string; label_ar: string; label_en: string }
+): Promise<void> {
+  const { error } = await supabase.from("car_attributes").upsert(patch)
+  if (error) throw error
+}
+
+/** Delete a catalog attribute. System attributes must not be deleted. */
+export async function deleteCarAttribute(id: string): Promise<void> {
+  const { error } = await supabase.from("car_attributes").delete().eq("id", id)
+  if (error) throw error
+}
+
+/** Move an attribute up/down in the display order (swap sort_order). */
+export async function reorderCarAttribute(args: {
+  id: string
+  sortOrder: number
+}): Promise<void> {
+  const { error } = await supabase
+    .from("car_attributes")
+    .update({ sort_order: args.sortOrder })
+    .eq("id", args.id)
+  if (error) throw error
+}
+
+/** Persist the full set of a car's attribute values (upsert, keyed by
+ *  attribute_id). `values` is a map of attributeId -> value; entries with an
+ *  empty value are deleted. */
+export async function saveCarAttributeValues(
+  carId: string,
+  values: Record<string, string>
+): Promise<void> {
+  const entries = Object.entries(values).filter(([, v]) => v.trim() !== "")
+  // Upsert present values.
+  if (entries.length > 0) {
+    const rows = entries.map(([attributeId, value]) => ({
+      car_id: carId,
+      attribute_id: attributeId,
+      value: value.trim(),
+    }))
+    const { error } = await supabase
+      .from("car_attribute_values")
+      .upsert(rows, { onConflict: "car_id,attribute_id" })
+    if (error) throw error
+  }
+  // Delete rows whose value is now empty (attribute ids absent from values map
+  // are left untouched).
+  const emptyIds = entries.filter(([, v]) => v.trim() === "").map(([id]) => id)
+  if (emptyIds.length > 0) {
+    const { error } = await supabase
+      .from("car_attribute_values")
+      .delete()
+      .eq("car_id", carId)
+      .in("attribute_id", emptyIds)
+    if (error) throw error
+  }
+}
+
+/** Convenience: option label for a select attribute in the active language. */
+export function optionLabel(
+  option: CarAttributeOption,
+  lang: "ar" | "en"
+): string {
+  return lang === "ar" ? option.label_ar || option.label_en : option.label_en || option.label_ar
+}
+
 // ---------- Services ----------
 
 export function useServices() {
@@ -392,6 +496,21 @@ export async function setProviderAvailable(
     .from("profiles")
     .update({ is_available: isAvailable })
     .eq("id", providerId)
+  if (error) throw error
+}
+
+/** Updates any editable aspect of a captain (provider) profile. */
+export async function updateProviderProfile(
+  userId: string,
+  patch: Partial<Profile>
+): Promise<void> {
+  const { error } = await supabase.from("profiles").update(patch).eq("id", userId)
+  if (error) throw error
+}
+
+/** Deletes a captain's profile row. May be blocked by FK if bookings reference it. */
+export async function deleteProvider(userId: string): Promise<void> {
+  const { error } = await supabase.from("profiles").delete().eq("id", userId)
   if (error) throw error
 }
 
