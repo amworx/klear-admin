@@ -272,7 +272,8 @@ export function ClientsPage() {
     return (
       !q ||
       (c.full_name ?? "").toLowerCase().includes(q) ||
-      (c.phone ?? "").toLowerCase().includes(q)
+      (c.phone ?? "").toLowerCase().includes(q) ||
+      (c.client_no ?? "").toLowerCase().includes(q)
     )
   })
 
@@ -339,6 +340,7 @@ export function ClientsPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>{t("clientId")}</TableHead>
                 <TableHead>{t("fullName")}</TableHead>
                 <TableHead>{t("phone")}</TableHead>
                 <TableHead>{t("status")}</TableHead>
@@ -356,6 +358,9 @@ export function ClientsPage() {
                     setDetailOpen(true)
                   }}
                 >
+                  <TableCell>
+                    {c.client_no ? <span dir="ltr">{c.client_no}</span> : "—"}
+                  </TableCell>
                   <TableCell>{c.full_name || "—"}</TableCell>
                   <TableCell>
                     {c.phone ? <span dir="ltr">{c.phone}</span> : "—"}
@@ -585,6 +590,12 @@ function ProfileTab({
     return (
       <div className="space-y-4">
         <dl className="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <dt className="text-muted-foreground">{t("clientId")}</dt>
+            <dd className="font-medium">
+              {client.client_no ? <span dir="ltr">{client.client_no}</span> : "—"}
+            </dd>
+          </div>
           <div>
             <dt className="text-muted-foreground">{t("fullName")}</dt>
             <dd className="font-medium">{client.full_name || "—"}</dd>
@@ -1249,6 +1260,7 @@ function PaymentsTab({
 const STATUS_KEY = {
   pending: "statusPending",
   accepted: "statusAccepted",
+  on_the_way: "statusOnTheWay",
   in_progress: "statusInProgress",
   completed: "statusCompleted",
   cancelled: "statusCancelled",

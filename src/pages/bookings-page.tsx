@@ -80,6 +80,7 @@ export function BookingsPage() {
       !q ||
       (b.customer?.full_name ?? "").toLowerCase().includes(q) ||
       (b.customer?.phone ?? "").toLowerCase().includes(q) ||
+      (b.customer?.client_no ?? "").toLowerCase().includes(q) ||
       (b.service?.name_ar ?? "").toLowerCase().includes(q) ||
       (b.service?.name_en ?? "").toLowerCase().includes(q) ||
       (b.address ?? "").toLowerCase().includes(q)
@@ -189,6 +190,9 @@ export function BookingsPage() {
                 >
                   <TableCell>
                     {b.customer?.full_name || b.customer?.phone || "—"}
+                    {b.customer?.client_no
+                      ? " (" + b.customer.client_no + ")"
+                      : ""}
                   </TableCell>
                   <TableCell>
                     {lang === "ar" ? b.service?.name_ar : b.service?.name_en}
@@ -227,6 +231,9 @@ export function BookingsPage() {
                     {selected.customer?.full_name ||
                       selected.customer?.phone ||
                       "—"}
+                    {selected.customer?.client_no
+                      ? " (" + selected.customer.client_no + ")"
+                      : ""}
                   </dd>
                 </div>
                 <div>

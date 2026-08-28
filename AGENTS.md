@@ -30,7 +30,7 @@ memory system, UI Design Playbook. This file only adds project-specific rules.
 
 ## Key facts (from DB)
 
-- booking_status enum: `pending | accepted | in_progress | completed | cancelled`
+- booking_status enum: `pending | accepted | on_the_way | in_progress | completed | cancelled`
   (there is NO `confirmed` — PATCHing that value returns 400).
 - `app_settings` is a single row (id=1):
   size_small_factor 1.0, size_medium_factor 1.25, size_large_factor 1.5,

@@ -110,3 +110,25 @@ Append-only. Format: EVT-YYYYMMDD-XXXX
 - **errors**: fill("") on React controlled number input showed DOM cleared but React state kept old value -> saved stale 20; real keyboard events (Ctrl+A, Delete) work. Also PS 5.1 mangles inline JSON for curl (-d / --data-binary @file both failed with bad_json); node fetch used instead.
 - **lessons**: L-023 (React input clearing in E2E), L-024 (P-001 node variant)
 - **tags**: services, merchandising, badge, discount, providers, availability, e2e
+
+## EVT-20260823-0002
+- **timestamp**: 2026-08-23
+- **mode**: MEMORY
+- **action**: Record next-session plan (user-stated)
+- **summary**: NEXT SESSION SCOPE: (1) Admin dashboard UI work on klear-admin (current state: base-nova shadcn, pages overview/bookings/clients/services/pricing/providers/payments; service merchandising editors + provider availability switch shipped today, commit 8d598ee). Specific UI targets TBD with user at session start.
+- **result**: LOGGED - no code changes
+- **files**: none
+- **errors**: none
+- **lessons**: n/a
+- **tags**: planning, next-session
+
+## EVT-20260827-0001
+- **timestamp**: 2026-08-27
+- **mode**: BUILD
+- **action**: Live Ops board (real-time operations) - "/live-ops" route
+- **summary**: New Live Operations board exposing real-time operational state across the Klear fleet. Added to types.ts: BookingStatus now includes 'on_the_way' (enum grew to pending|accepted|on_the_way|in_progress|completed|cancelled to match DB), new CaptainLocation type (captain_locations row: provider_id/lat/lng/active_booking_id/updated_at). queries.ts: useLiveBookings (in status accepted/on_the_way/in_progress, ordered by updated_at), usePoolBookings (pending + provider_id null), useCaptainLocations (all GPS rows desc), useBookingStatusCounts. New src/lib/hooks/use-live-realtime.ts: single RealtimeChannel subscribed to * on bookings + captain_locations invalidating the live/pool/count + locations query keys; returns isLive connected indicator. New pages/live-ops-page.tsx: PageHeader + live Connected/Disconnected badge, 4 stat cards (On the way / Washes in progress / Open pool / Active bookings), two-pane grid: Live washes table (captain, service, status badge, live wash-point coords from captain_locations deduped newest-per-provider) + Open pool card (customer, service, price, scheduled time, coords). Status badges color-coded (on_the_way secondary, in_progress default, accepted outline). Registered route /live-ops in App.tsx + nav item navLiveOps (Activity icon) in app-shell. i18n (ar+en): navLiveOps + statusOnTheWay + live* keys. Fixed pre-existing clients-page STATUS_KEY to include on_the_way -> statusOnTheWay (was missing -> TS error once enum grew). Updated AGENTS.md booking_status line to include on_the_way.
+- **result**: SUCCESS - typecheck clean, lint clean, `npm run build` green (only pre-existing chunk-size warning). NOT committed (commit only when user asks).
+- **files**: src/lib/types.ts, src/lib/i18n.tsx, src/lib/hooks/queries.ts, src/lib/hooks/use-live-realtime.ts (new), src/pages/live-ops-page.tsx (new), src/pages/clients-page.tsx, src/components/layout/app-shell.tsx, src/App.tsx, AGENTS.md
+- **errors**: build gate caught 3: unused React import in new page (automatic JSX transform - remove the import), Map typed against `(typeof locations.data)[number]` fails because data is `T[] | undefined` (use CaptainLocation element type), clients-page STATUS_KEY missing on_the_way (adding it to the BookingStatus enum surfaced the gap). Realtime RLS confirmed via 20260824_000013_staff_ops.sql: admin has select via is_admin() on captain_locations AND both bookings + captain_locations are in supabase_realtime publication - so admin realtime on the anonymous-key channel with RLS works.
+- **lessons**: When widening a DB-mirrored enum union in types.ts, grep for `BookingStatus`/STATUS_KEY-style local unions across pages - TS exhaustiveness/build will only catch the ones the widened type flows through, so audit manually. Realtime postgres_changes applies SELECT RLS on the authenticated channel, so an existing SELECT policy (is_admin()) is all that's needed for admin realtime - no special realtime policy beyond being in the publication.
+- **tags**: live-ops, realtime, captain_locations, admin-dashboard, on_the_way, booking-status, build-gate

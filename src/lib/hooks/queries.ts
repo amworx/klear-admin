@@ -3,7 +3,9 @@ import { supabase } from "@/lib/supabase"
 import type {
   AppSettings,
   Booking,
+  BookingStatus,
   BookingWithRelations,
+  CaptainLocation,
   Car,
   Payment,
   Profile,
@@ -64,7 +66,7 @@ export function useRecentBookings(limit = 8) {
         .from("bookings")
         .select(
           `*,
-          customer:profiles!bookings_customer_id_fkey(id, full_name, phone),
+          customer:profiles!bookings_customer_id_fkey(id, full_name, phone, client_no),
           service:services(id, name_ar, name_en, base_price)`
         )
         .order("created_at", { ascending: false })
@@ -104,7 +106,7 @@ export function useBookings() {
         .from("bookings")
         .select(
           `*,
-          customer:profiles!bookings_customer_id_fkey(id, full_name, phone),
+          customer:profiles!bookings_customer_id_fkey(id, full_name, phone, client_no),
           provider:profiles!bookings_provider_id_fkey(id, full_name, phone),
           service:services(id, name_ar, name_en, base_price),
           car:cars(id, make, model, plate_number, size),
@@ -432,7 +434,7 @@ export function usePayments() {
         .select(
           `*,
           booking:bookings(id, customer_id, service_id, status,
-            customer:profiles!bookings_customer_id_fkey(id, full_name, phone),
+            customer:profiles!bookings_customer_id_fkey(id, full_name, phone, client_no),
             service:services(id, name_ar, name_en))`
         )
         .order("created_at", { ascending: false })
@@ -442,7 +444,7 @@ export function usePayments() {
           id: string
           customer_id: string
           status: string
-          customer: { id: string; full_name: string | null; phone: string | null } | null
+          customer: { id: string; full_name: string | null; phone: string | null; client_no: string | null } | null
           service: { id: string; name_ar: string; name_en: string } | null
         } | null
       })[]
@@ -456,4 +458,89 @@ export async function updatePaymentStatus(
 ): Promise<void> {
   const { error } = await supabase.from("payments").update({ status }).eq("id", id)
   if (error) throw error
+}
+
+// ---------- Live Ops (real-time operations board) ----------
+
+const LIVE_STATUS: BookingStatus[] = ["accepted", "on_the_way", "in_progress"]
+
+/** Bookings that are currently live (accepted / on-the-way / in-progress),
+ *  most recently updated first. */
+export function useLiveBookings() {
+  return useQuery({
+    queryKey: ["live-bookings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bookings")
+        .select(
+          `*,
+          customer:profiles!bookings_customer_id_fkey(id, full_name, phone, client_no),
+          provider:profiles!bookings_provider_id_fkey(id, full_name, phone),
+          service:services(id, name_ar, name_en, base_price),
+          car:cars(id, make, model, plate_number, size),
+          payment:payments(id, amount, status, method)`
+        )
+        .in("status", LIVE_STATUS)
+        .order("updated_at", { ascending: false })
+      if (error) throw error
+      return (data ?? []) as BookingWithRelations[]
+    },
+  })
+}
+
+/** Unassigned pending bookings sitting in the open pool (available to claim). */
+export function usePoolBookings() {
+  return useQuery({
+    queryKey: ["pool-bookings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bookings")
+        .select(
+          `*,
+          customer:profiles!bookings_customer_id_fkey(id, full_name, phone, client_no),
+          provider:profiles!bookings_provider_id_fkey(id, full_name, phone),
+          service:services(id, name_ar, name_en, base_price),
+          car:cars(id, make, model, plate_number, size),
+          payment:payments(id, amount, status, method)`
+        )
+        .eq("status", "pending")
+        .is("provider_id", null)
+        .order("created_at", { ascending: false })
+      if (error) throw error
+      return (data ?? []) as BookingWithRelations[]
+    },
+  })
+}
+
+/** The most recent live GPS row for every captain. */
+export function useCaptainLocations() {
+  return useQuery({
+    queryKey: ["captain-locations"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("captain_locations")
+        .select("*")
+        .order("updated_at", { ascending: false })
+      if (error) throw error
+      return (data ?? []) as CaptainLocation[]
+    },
+  })
+}
+
+/** Counts of bookings by current status across the whole board. */
+export function useBookingStatusCounts() {
+  return useQuery({
+    queryKey: ["booking-status-counts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bookings")
+        .select("status")
+      if (error) throw error
+      const counts: Record<string, number> = {}
+      for (const b of data ?? []) {
+        counts[b.status] = (counts[b.status] ?? 0) + 1
+      }
+      return counts
+    },
+  })
 }

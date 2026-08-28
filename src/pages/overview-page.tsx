@@ -253,6 +253,9 @@ export function OverviewPage() {
                   <TableRow key={b.id}>
                     <TableCell>
                       {b.customer?.full_name || b.customer?.phone || "—"}
+                      {b.customer?.client_no
+                        ? " (" + b.customer.client_no + ")"
+                        : ""}
                     </TableCell>
                     <TableCell>
                       {lang === "ar" ? b.service?.name_ar : b.service?.name_en}

@@ -9,6 +9,7 @@ import {
   Settings2,
   Truck,
   CreditCard,
+  Activity,
   Sun,
   Moon,
   Languages,
@@ -63,6 +64,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/pricing", label: "navPricing", icon: Settings2 },
   { to: "/providers", label: "navProviders", icon: Truck },
   { to: "/payments", label: "navPayments", icon: CreditCard },
+  { to: "/live-ops", label: "navLiveOps", icon: Activity },
 ]
 
 function AppSidebar() {

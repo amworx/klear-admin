@@ -102,6 +102,9 @@ export function PaymentsPage() {
                     {p.booking?.customer?.full_name ||
                       p.booking?.customer?.phone ||
                       "—"}
+                    {p.booking?.customer?.client_no
+                      ? " (" + p.booking.customer.client_no + ")"
+                      : ""}
                   </TableCell>
                   <TableCell>
                     {lang === "ar"

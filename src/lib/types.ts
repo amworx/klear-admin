@@ -7,6 +7,8 @@ export type Profile = {
   id: string
   full_name: string | null
   phone: string | null
+  /** Global, human-friendly sequential client number (e.g. CL-1001). */
+  client_no: string | null
   role: UserRole
   is_available: boolean
   created_at: string
@@ -19,6 +21,7 @@ export type Profile = {
 export type BookingStatus =
   | "pending"
   | "accepted"
+  | "on_the_way"
   | "in_progress"
   | "completed"
   | "cancelled"
@@ -112,9 +115,19 @@ export type AppSettings = {
 
 // Joins used by the dashboard queries.
 export type BookingWithRelations = Booking & {
-  customer: Pick<Profile, "id" | "full_name" | "phone"> | null
+  customer: Pick<Profile, "id" | "full_name" | "phone" | "client_no"> | null
   provider: Pick<Profile, "id" | "full_name" | "phone"> | null
   service: Pick<Service, "id" | "name_ar" | "name_en" | "base_price"> | null
   car: Pick<Car, "id" | "make" | "model" | "plate_number" | "size"> | null
   payment: Pick<Payment, "id" | "amount" | "status" | "method"> | null
+}
+
+/** A captain's live GPS row from the `captain_locations` table. */
+export type CaptainLocation = {
+  id: string
+  provider_id: string
+  lat: number
+  lng: number
+  active_booking_id: string | null
+  updated_at: string
 }
