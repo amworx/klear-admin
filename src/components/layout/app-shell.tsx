@@ -16,6 +16,7 @@ import {
   Languages,
   LogOut,
   Menu,
+  PanelLeftClose,
 } from "lucide-react"
 
 import { useI18n, type TranslationKey } from "@/lib/i18n"
@@ -31,12 +32,13 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
+  SidebarFooter,
   SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-  SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import {
@@ -49,7 +51,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Separator } from "@/components/ui/separator"
 
 type NavItem = {
   to: string
@@ -71,6 +72,7 @@ const NAV_ITEMS: NavItem[] = [
 
 function AppSidebar() {
   const { t, dir } = useI18n()
+  const { toggleSidebar } = useSidebar()
   return (
     <Sidebar collapsible="icon" side={dir === "rtl" ? "right" : "left"}>
       <SidebarHeader>
@@ -116,6 +118,20 @@ function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip={t("collapseMenu")}
+              onClick={() => toggleSidebar()}
+              className="mt-1"
+            >
+              <PanelLeftClose className="size-4 rtl:rotate-180" />
+              <span>{t("collapseMenu")}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   )
 }
@@ -140,8 +156,6 @@ function Topbar() {
 
   return (
     <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <SidebarTrigger />
-      <Separator orientation="vertical" className="ms-2 h-4" />
       <div className="flex flex-1 items-center justify-end gap-2">
         <Button
           variant="ghost"
