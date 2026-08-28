@@ -10,6 +10,7 @@ import {
   Truck,
   CreditCard,
   Activity,
+  CalendarRange,
   Sun,
   Moon,
   Languages,
@@ -65,6 +66,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/providers", label: "navProviders", icon: Truck },
   { to: "/payments", label: "navPayments", icon: CreditCard },
   { to: "/live-ops", label: "navLiveOps", icon: Activity },
+  { to: "/calendar", label: "navCalendar", icon: CalendarRange },
 ]
 
 function AppSidebar() {

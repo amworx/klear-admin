@@ -544,3 +544,33 @@ export function useBookingStatusCounts() {
     },
   })
 }
+
+// ---------- Advanced Calendar ----------
+
+/**
+ * Bookings whose window overlaps the [start, end] range (inclusive).
+ * Used by the advanced calendar to render month/week/day/agenda views and to
+ * compute captain assignments for the period.
+ */
+export function useCalendarBookings(startISO: string, endISO: string) {
+  return useQuery({
+    queryKey: ["calendar-bookings", startISO, endISO],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bookings")
+        .select(
+          `*,
+          customer:profiles!bookings_customer_id_fkey(id, full_name, phone, client_no),
+          provider:profiles!bookings_provider_id_fkey(id, full_name, phone),
+          service:services(id, name_ar, name_en, base_price),
+          car:cars(id, make, model, plate_number, size),
+          payment:payments(id, amount, status, method)`
+        )
+        .gte("scheduled_at", startISO)
+        .lte("scheduled_at", endISO)
+        .order("scheduled_at", { ascending: true })
+      if (error) throw error
+      return (data ?? []) as BookingWithRelations[]
+    },
+  })
+}

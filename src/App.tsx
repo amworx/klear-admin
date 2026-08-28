@@ -15,6 +15,7 @@ import { PricingPage } from "@/pages/pricing-page"
 import { ProvidersPage } from "@/pages/providers-page"
 import { PaymentsPage } from "@/pages/payments-page"
 import { LiveOpsPage } from "@/pages/live-ops-page"
+import { CalendarPage } from "@/pages/calendar-page"
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { status, isAdmin } = useAuth()
@@ -54,6 +55,7 @@ export function App() {
           <Route path="/providers" element={<ProvidersPage />} />
           <Route path="/payments" element={<PaymentsPage />} />
           <Route path="/live-ops" element={<LiveOpsPage />} />
+          <Route path="/calendar" element={<CalendarPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
