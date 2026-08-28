@@ -136,3 +136,9 @@ Append-only.
 **Problem**: curl.exe with inline JSON (-d '{...}') or --data-binary "@file" both returned bad_json from Supabase under PS 5.1 quoting rules.
 **Fix**: use a small node script with global fetch (see Temp/opencode/e2e_session.js pattern): generate_link (service key) -> verify (anon key) -> write at/rt files -> build hash URL -> navigate.
 **Rule**: on this Windows box, prefer node fetch over curl.exe for JSON POST bodies in all auth/session tooling.
+
+## L-025 — A DELETE with no matching RLS policy returns 204 (silent no-op) (2026-08-28)
+- **Problem**: admin DELETE on `profiles` "succeeded" (204) and showed the success toast, but the row was never removed (verified via DB + table still showing it).
+- **Root cause**: `profiles` had a `profiles_select_admin`/`profiles_update_admin` policy but NO `profiles_delete_admin` policy. RLS filters out the row for DELETE (no matching policy), so PostgREST returns 204 (success) while deleting 0 rows - it does NOT error. The designed FK protection (`bookings_provider_id_fkey`, 23503) never got a chance to run.
+- **Fix**: add `drop policy if exists "profiles_delete_admin"; create policy ... for delete using (public.is_admin());` and apply with `supabase db query --db-url <url> --file <stmt>` (NOT `db push` - CLI tracker mismatch). Afterwards DELETE of a booking-linked captain returns HTTP 409 with FK error 23503 -> the catch path (providerDeleteBlocked toast) fires; captains with no bookings delete normally.
+- **Reusable pattern**: to make destructive admin actions real, confirm the DELETE RLS policy exists before wiring destructive UI. Trust DB state (row present/absent), not the toast. A delete request that returns 204 but leaves the row is an RLS no-op, not a success.

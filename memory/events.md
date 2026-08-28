@@ -164,3 +164,36 @@ Append-only. Format: EVT-YYYYMMDD-XXXX
 - **errors**: (1) base-ui SidebarMenuButton does NOT support `asChild` (Radix convention) — would nest a button inside the default button; fix is to use the `render` prop or pass onClick directly since the default tag is already button. (2) ScrollArea component does not exist in this repo — used a plain overflow-y-auto div instead.
 - **lessons**: For email-client master-detail UIs in this base-ui kit, do NOT use `asChild` on SidebarMenuButton — it has a `render` prop and defaults to `<button>`, so pass onClick directly. The mobile Sheet drawer's backdrop-blur was the source of "sidebar toggle blurs content" — removing the blur (keep a dim overlay) eliminates it. Verify shell chrome (toggle placement, overflow, drawer behavior) by reading the a11y snapshot + checking data-state/width via evaluate_script, since the a11y tree shows text even when the icon rail hides it.
 - **tags**: bookings, master-detail, email-client, sidebar, layout, blur, sheet, rtl, client-id, i18n, build-gate
+
+## EVT-20260828-0011
+- **timestamp**: 2026-08-28
+- **mode**: BUILD
+- **action**: Fix Car Attributes table header/value alignment (RTL admin app)
+- **summary**: User reported "car attributes table cells values are not aligned correctly". Root cause: the shared shadcn `TableHead` component hardcoded `text-left`, so in the RTL app every Arabic header ("الاسم (عربي)", "النوع", "ظاهرة", ...) was left-aligned while its `TableCell` values inherited the RTL document direction and right-aligned (text-align: start -> right). Result: headers sat on the left but their Arabic values on the right → columns looked shifted/misaligned on EVERY admin table. Also the key column had no `dir`, so the LTR key text (`make`) was right-aligned and the system "نظامية" badge glued to the key (`makeنظامية`). Fix: (1) shared `table.tsx` TableHead `text-left` → `text-start` (logical: right in RTL, left in LTR — no behavior change for LTR apps, fixes Arabic headers app-wide); (2) on the car-attributes page, marked the LTR-content columns (sortOrder, attrKey, nameEn) `dir="ltr"` on BOTH header and cell so `text-start` resolves left consistently; (3) key cell now `dir="ltr"` + system badge `ms-2`/gap. Verified in browser: all 9 columns header==value text-align (0 mismatches across all rows); badge now sits 8px from the key; clients page table also 0 mismatches (no regression from the shared change). Build green (`✓ built in 5.03s`, exit 0), lint exit 0.
+- **result**: SUCCESS - car-attributes table fully aligned (0 mismatches), clients table unaffected, build + lint green. Not committed (commit only when user asks).
+- **files**: src/components/ui/table.tsx (TableHead text-left→text-start), src/pages/car-attributes-page.tsx (header dir=ltr on sortOrder/attrKey/nameEn; key cell dir=ltr + badge ms-2)
+- **errors**: none blocking. Browser innerText shows `makeنظامية` with no space even though the badge is a separate element with 8px margin — innerText concatenates the key span and badge span; visual gap confirmed via getBoundingClientRect (8.0px).
+- **lessons**: In RTL apps the shadcn/basic `TableHead` default `text-left` breaks Arabic tables (headers left, values right). Use the logical `text-start` so headers align with the document direction, and for columns intentionally rendered LTR, set `dir="ltr"` on BOTH the `<th>` and `<td>` so `text-start` resolves to the same side. Verify per-column header/val text-align match via getComputedStyle across all rows (evaluate_script), not by screenshot.
+- **tags**: table, alignment, rtl, ltr, text-start, TableHead, car-attributes, bug-fix, build-gate
+
+## EVT-20260828-0012
+- **timestamp**: 2026-08-28
+- **mode**: BUILD
+- **action**: Add tooltips to system + affects-price badges on /car-attributes page
+- **summary**: Wrapped the system badge (attrSystemLocked text) and the affects-price badge on the car attributes table rows in base-ui Tooltip/TooltipTrigger/TooltipContent so hovering explains them. Tooltip components render as Badge with cursor-help, side=top. New i18n keys added to BOTH ar+en blocks: ttrSystemTooltip (ar "????? ?????? ????? - ?? ???? ?????" / en "Built-in system attribute - cannot be deleted") and ttrAffectsPriceTooltip (ar "????? ??? ?????? ???? ???????" / en "Multiplies the wash price by this factor"). Verified 5 tooltip triggers render and hover shows the Arabic system message.
+- **result**: SUCCESS - build green (built in 5.41s, exit 0) + lint exit 0. Not committed (commit only when user asks).
+- **files**: src/pages/car-attributes-page.tsx (tooltip imports + badge tooltips), src/lib/i18n.tsx (attrSystemTooltip + attrAffectsPriceTooltip, ar ~151 + en ~431)
+- **errors**: none
+- **lessons**: base-ui Tooltip requires the trigger renderable (render= Badge); set cursor-help + side for actionable affordance. Keep ar/en i18n blocks key-identical.
+- **tags**: tooltip, car-attributes, i18n, admin, build-gate
+
+## EVT-20260828-0013
+- **timestamp**: 2026-08-28
+- **mode**: BUILD
+- **action**: Captain (provider) edit/delete admin page + missing RLS delete policy fix
+- **summary**: Completed the providers edit/delete UI that started in the previous session. providers-page.tsx: added edit (Dialog: full_name, phone dir=ltr, is_active switch) + delete (AlertDialog) with row action icon buttons (Pencil/Trash2) in a text-end actions column; handlers openEdit/set/save/remove; delete failure toast uses t(providerDeleteBlocked). E2E verified in browser: edit dialog opens & PATCH persists (phone -> 0991234567 in DB); delete dialog opens & confirm. BUG FOUND during E2E: profiles table had NO profiles_delete_admin RLS policy, so an admin DELETE was silently filtered by RLS (PostgREST returned 204) and the row was never removed - UI showed misleading success toast and the designed FK protection never ran. CREATED + APPLIED migration android/klear/supabase/migrations/20260828_000018_profiles_delete_policy.sql (drop+create profiles_delete_admin using is_admin()) live via supabase db query --db-url (split one statement per --file per handoff 7). Re-tested: DELETE of the booking-linked captain (3 bookings) now returns HTTP 409 with FK error 23503 bookings_provider_id_fkey -> catch shows providerDeleteBlocked; captain row intact (no data loss). Delete of a captain with no bookings would succeed -> providerDeleted.
+- **result**: SUCCESS - build (tsc+vite) green, lint exit 0; edit/delete E2E verified with correct FK-blocked behavior
+- **files**: src/pages/providers-page.tsx, ../android/klear/supabase/migrations/20260828_000018_profiles_delete_policy.sql, memory/events.md
+- **errors**: missing profiles_delete_admin RLS policy caused silent delete no-op (204) + misleading success toast - fixed with the new migration; use supabase db query --db-url, NOT db push (CLI tracker mismatch)
+- **lessons**: A DELETE with no matching RLS policy returns 204 (silent no-op), NOT an error - PostgREST filters the row and reports success. Always verify destructive admin actions actually persist (row removed) rather than trusting the toast. Confirm an admin DELETE policy exists before wiring destructive UI.
+- **tags**: providers, captains, edit, delete, dialog, alertdialog, rls, delete-policy, migration, supabase, e2e
