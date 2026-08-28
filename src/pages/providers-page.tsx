@@ -2,7 +2,6 @@ import { useQueryClient } from "@tanstack/react-query"
 import {
   useProviders,
   useProviderJobCounts,
-  setProviderAvailable,
   updateProviderProfile,
   deleteProvider,
 } from "@/lib/hooks/queries"
@@ -65,23 +64,8 @@ export function ProvidersPage() {
   const queryClient = useQueryClient()
   const providers = useProviders()
   const jobCounts = useProviderJobCounts()
-  const [togglingId, setTogglingId] = React.useState<string | null>(null)
 
   const activeCount = (providers.data ?? []).filter((p) => p.is_available).length
-
-  const toggleAvailability = async (id: string, value: boolean) => {
-    setTogglingId(id)
-    try {
-      await setProviderAvailable(id, value)
-      await queryClient.invalidateQueries({ queryKey: ["providers"] })
-      toast.success(t("saved"))
-    } catch (error) {
-      console.error("setProviderAvailable error:", error)
-      toast.error(t("authError"))
-    } finally {
-      setTogglingId(null)
-    }
-  }
 
   const [editing, setEditing] = React.useState<Profile | null>(null)
   const [editOpen, setEditOpen] = React.useState(false)
@@ -89,6 +73,7 @@ export function ProvidersPage() {
     full_name: "",
     phone: "",
     is_active: true,
+    is_available: true,
   })
   const [saving, setSaving] = React.useState(false)
   const [deleteTarget, setDeleteTarget] = React.useState<Profile | null>(null)
@@ -100,6 +85,7 @@ export function ProvidersPage() {
       full_name: p.full_name ?? "",
       phone: p.phone ?? "",
       is_active: p.is_active,
+      is_available: p.is_available,
     })
     setEditOpen(true)
   }
@@ -120,6 +106,7 @@ export function ProvidersPage() {
         full_name: name,
         phone: form.phone.trim() || null,
         is_active: form.is_active,
+        is_available: form.is_available,
       })
       await queryClient.invalidateQueries({ queryKey: ["providers"] })
       toast.success(t("providerUpdated"))
@@ -196,7 +183,6 @@ export function ProvidersPage() {
                   <TableHead>{t("fullName")}</TableHead>
                   <TableHead>{t("phone")}</TableHead>
                   <TableHead>{t("availability")}</TableHead>
-                  <TableHead>{t("availabilityToggle")}</TableHead>
                   <TableHead>{t("assignedJobs")}</TableHead>
                   <TableHead>{t("memberSince")}</TableHead>
                   <TableHead className="text-end">{t("actions")}</TableHead>
@@ -217,14 +203,6 @@ export function ProvidersPage() {
                         ) : (
                           <Badge variant="secondary">{t("blocked")}</Badge>
                         )}
-                      </TableCell>
-                      <TableCell>
-                        <Switch
-                          checked={p.is_available}
-                          disabled={togglingId === p.id}
-                          onCheckedChange={(v) => toggleAvailability(p.id, v)}
-                          aria-label={t("availabilityToggle")}
-                        />
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
@@ -296,6 +274,14 @@ export function ProvidersPage() {
                 id="provider_is_active"
                 checked={form.is_active}
                 onCheckedChange={(v) => set("is_active", v)}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="provider_is_available">{t("availabilityToggle")}</Label>
+              <Switch
+                id="provider_is_available"
+                checked={form.is_available}
+                onCheckedChange={(v) => set("is_available", v)}
               />
             </div>
           </div>
