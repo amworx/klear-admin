@@ -121,6 +121,8 @@ export type CarAttribute = {
   is_required: boolean
   /** Locked built-ins (make/model/plate_number/size) — cannot be deleted. */
   is_system: boolean
+  tooltip_ar: string | null
+  tooltip_en: string | null
   created_at: string
 }
 

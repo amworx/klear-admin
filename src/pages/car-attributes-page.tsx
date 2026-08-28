@@ -78,6 +78,8 @@ type AttrForm = {
   key: string
   label_ar: string
   label_en: string
+  tooltip_ar: string
+  tooltip_en: string
   data_type: "text" | "select"
   options: AttrOption[]
   affects_price: boolean
@@ -90,6 +92,8 @@ const EMPTY_FORM: AttrForm = {
   key: "",
   label_ar: "",
   label_en: "",
+  tooltip_ar: "",
+  tooltip_en: "",
   data_type: "text",
   options: [],
   affects_price: false,
@@ -125,6 +129,8 @@ export function CarAttributesPage() {
       key: a.key,
       label_ar: a.label_ar,
       label_en: a.label_en,
+      tooltip_ar: a.tooltip_ar ?? "",
+      tooltip_en: a.tooltip_en ?? "",
       data_type: a.data_type,
       options: a.options.map((o) => ({
         value: o.value,
@@ -190,6 +196,8 @@ export function CarAttributesPage() {
           "",
         label_ar: form.label_ar.trim(),
         label_en: form.label_en.trim(),
+        tooltip_ar: form.tooltip_ar.trim() || null,
+        tooltip_en: form.tooltip_en.trim() || null,
         data_type: form.data_type,
         options,
         affects_price: form.affects_price,
@@ -444,6 +452,29 @@ export function CarAttributesPage() {
                   onChange={(e) => set("key", e.target.value)}
                   dir="ltr"
                   placeholder="color"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-2">
+                <Label htmlFor="attr_tooltip_ar">تلميح (عربي)</Label>
+                <Input
+                  id="attr_tooltip_ar"
+                  value={form.tooltip_ar}
+                  onChange={(e) => set("tooltip_ar", e.target.value)}
+                  dir="rtl"
+                  placeholder="اشرح للعميل ما تعنيه هذه الخاصية"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="attr_tooltip_en">Tooltip (English)</Label>
+                <Input
+                  id="attr_tooltip_en"
+                  value={form.tooltip_en}
+                  onChange={(e) => set("tooltip_en", e.target.value)}
+                  dir="ltr"
+                  placeholder="Explain this attribute to the customer"
                 />
               </div>
             </div>
