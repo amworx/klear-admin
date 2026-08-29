@@ -161,50 +161,6 @@ function PricingForm({
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>{t("sizeFactors")}</CardTitle>
-            <CardDescription>
-              {t("sizeFactors")} · {t("currency")}: {form.currency}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-3">
-            <div className="grid gap-2">
-              <Label htmlFor="small">{t("smallFactor")}</Label>
-              <Input
-                id="small"
-                type="number"
-                step="0.05"
-                min="0"
-                value={form.size_small_factor}
-                onChange={(e) => set("size_small_factor", e.target.value)}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="medium">{t("mediumFactor")}</Label>
-              <Input
-                id="medium"
-                type="number"
-                step="0.05"
-                min="0"
-                value={form.size_medium_factor}
-                onChange={(e) => set("size_medium_factor", e.target.value)}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="large">{t("largeFactor")}</Label>
-              <Input
-                id="large"
-                type="number"
-                step="0.05"
-                min="0"
-                value={form.size_large_factor}
-                onChange={(e) => set("size_large_factor", e.target.value)}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
             <CardTitle>{t("urgentSurcharge")}</CardTitle>
             <CardDescription>{t("urgentSurcharge")}</CardDescription>
           </CardHeader>
