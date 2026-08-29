@@ -208,3 +208,14 @@ Append-only. Format: EVT-YYYYMMDD-XXXX
 - **errors**: none blocking. Note: availability toggling affects booking capacity (client availability RPC counts is_available=true), so restored the lone test captain to available after verifying.
 - **lessons**: Product term was "captain" (الكابتن) not "provider" (مزود الخدمة); keep nav/CTA/toast/empty strings consistent with the used term in BOTH ar+en i18n blocks (ar + en must stay key-identical). The availability toggle belongs in the captain's edit/settings dialog next to account status rather than as a quick table toggle, keeping destructive/capacity-affecting state changes in a deliberate edit action. When verifying a capacity-affecting toggle in a QA pass, always restore the original state afterward.
 - **tags**: providers, captains, rename, i18n, availability, is_available, dialog, tooltip, car-attributes, admin, build-gate
+
+## EVT-20260829-0006
+- **timestamp**: 2026-08-29
+- **mode**: BUILD
+- **action**: Needs-attention facet for expired/expiring bookings
+- **summary**: Admin had no time dimension: bookings list filtered only by status, no overdue/no-show concept. Added isBookingExpired/isBookingExpiringSoon helpers to lib/types.ts (Booking.windowEnd = scheduled_end ?? scheduled_at, same predicate as Flutter apps) and a Needs attention status filter that matches isExpired || isExpiringSoon. List now badges expired (red) and expiring-soon (orange) alongside the status badge; detail pane shows a matching banner so admins can triage no-show/overdue cases and resolve via existing status/provider update (cancel/reassign/complete). Added ar/en keys expiredBadge/expiringSoonBadge/expiredBanner/expiringSoonBanner/filterNeedsAttention. Verified with npx tsc --noEmit (exit 0) and npm run build (vite 6.52s, 1.29MB).
+- **result**: SUCCESS - committed 8deb49f and pushed main (506162a..8deb49f)
+- **files**: src/lib/i18n.tsx, src/lib/types.ts, src/pages/bookings-page.tsx
+- **errors**: none
+- **lessons**: Keep expiry derived on read (no DB enum) so admin and mobile agree without a scheduler; a Needs attention filter is the professional admin pattern for overdue work (vs silently leaving stale pendings in the list).
+- **tags**: admin, bookings, expired, needs-attention, filter, badge, banner, i18n, cross-app
