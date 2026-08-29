@@ -173,6 +173,9 @@ export type AppSettings = {
   service_hours_start: string // HH:mm
   service_hours_end: string // HH:mm
   currency: string
+  service_center_lat: number | null
+  service_center_lng: number | null
+  service_radius_km: number | null
   updated_at: string
 }
 

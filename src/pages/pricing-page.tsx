@@ -19,6 +19,9 @@ type SettingsForm = {
   service_hours_start: string
   service_hours_end: string
   currency: string
+  service_center_lat: string
+  service_center_lng: string
+  service_radius_km: string
 }
 
 function formFromSettings(s: AppSettings): SettingsForm {
@@ -30,6 +33,9 @@ function formFromSettings(s: AppSettings): SettingsForm {
     service_hours_start: s.service_hours_start.slice(0, 5),
     service_hours_end: s.service_hours_end.slice(0, 5),
     currency: s.currency,
+    service_center_lat: s.service_center_lat != null ? String(s.service_center_lat) : "",
+    service_center_lng: s.service_center_lng != null ? String(s.service_center_lng) : "",
+    service_radius_km: s.service_radius_km != null ? String(s.service_radius_km) : "",
   }
 }
 
@@ -94,7 +100,10 @@ function PricingForm({
       service_hours_start: `${form.service_hours_start}:00`,
       service_hours_end: `${form.service_hours_end}:00`,
       currency: form.currency.trim() || "SYP",
-    }
+      service_center_lat: form.service_center_lat.trim() === "" ? null : Number(form.service_center_lat),
+      service_center_lng: form.service_center_lng.trim() === "" ? null : Number(form.service_center_lng),
+      service_radius_km: form.service_radius_km.trim() === "" ? null : Number(form.service_radius_km),
+    } as unknown as Partial<AppSettings>
     try {
       await updateAppSettings(patch)
       await onSaved()
@@ -220,6 +229,54 @@ function PricingForm({
                 onChange={(e) => set("service_hours_end", e.target.value)}
               />
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>{t("serviceArea")}</CardTitle>
+            <CardDescription>{t("serviceAreaDesc")}</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-2">
+              <Label htmlFor="lat">{t("serviceCenterLat")}</Label>
+              <Input
+                id="lat"
+                type="number"
+                step="0.0001"
+                placeholder="36.5114"
+                value={form.service_center_lat}
+                onChange={(e) => set("service_center_lat", e.target.value)}
+                dir="ltr"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="lng">{t("serviceCenterLng")}</Label>
+              <Input
+                id="lng"
+                type="number"
+                step="0.0001"
+                placeholder="36.8681"
+                value={form.service_center_lng}
+                onChange={(e) => set("service_center_lng", e.target.value)}
+                dir="ltr"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="radius">{t("serviceRadius")}</Label>
+              <Input
+                id="radius"
+                type="number"
+                min="0"
+                placeholder="15"
+                value={form.service_radius_km}
+                onChange={(e) => set("service_radius_km", e.target.value)}
+                dir="ltr"
+              />
+            </div>
+            <p className="sm:col-span-3 text-xs text-muted-foreground">
+              {t("serviceAreaAfrinHint")}
+            </p>
           </CardContent>
         </Card>
       </div>
