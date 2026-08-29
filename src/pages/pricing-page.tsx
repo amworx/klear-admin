@@ -9,7 +9,33 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import { toast } from "sonner"
+import L from "leaflet"
+import "leaflet/dist/leaflet.css"
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Circle,
+  useMap,
+  useMapEvents,
+} from "react-leaflet"
+
+// Fix leaflet default icon (Vite doesn't copy images)
+const defaultIcon = L.icon({
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+})
 
 type SettingsForm = {
   size_small_factor: string
@@ -89,6 +115,7 @@ function PricingForm({
     formFromSettings(settings)
   )
   const [saving, setSaving] = React.useState(false)
+  const [mapOpen, setMapOpen] = React.useState(false)
 
   const save = async () => {
     setSaving(true)
@@ -277,9 +304,109 @@ function PricingForm({
             <p className="sm:col-span-3 text-xs text-muted-foreground">
               {t("serviceAreaAfrinHint")}
             </p>
+            <div className="sm:col-span-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setMapOpen(true)}
+                className="w-full sm:w-auto"
+              >
+                📍 {t("serviceArea")} — Pick on map
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={mapOpen} onOpenChange={setMapOpen}>
+        <DialogContent className="max-w-2xl p-0 overflow-hidden gap-0">
+          <DialogHeader className="p-4 pb-2">
+            <DialogTitle>{t("serviceArea")} — Map</DialogTitle>
+            <DialogDescription>{t("serviceAreaDesc")}</DialogDescription>
+          </DialogHeader>
+          <div className="h-[420px] w-full">
+            <ServiceAreaMap
+              lat={Number(form.service_center_lat) || 36.5114}
+              lng={Number(form.service_center_lng) || 36.8681}
+              radiusKm={Number(form.service_radius_km) || 15}
+              onChange={(lat, lng) => {
+                set("service_center_lat", String(lat.toFixed(4)))
+                set("service_center_lng", String(lng.toFixed(4)))
+              }}
+            />
+          </div>
+          <div className="flex items-center gap-2 p-4 text-xs text-muted-foreground">
+            <span>
+              {form.service_center_lat}, {form.service_center_lng} · {form.service_radius_km} km
+            </span>
+          </div>
+          <DialogFooter className="p-4 pt-0">
+            <Button onClick={() => setMapOpen(false)}>{t("save")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+  )
+}
+
+function ServiceAreaMap({
+  lat,
+  lng,
+  radiusKm,
+  onChange,
+}: {
+  lat: number
+  lng: number
+  radiusKm: number
+  onChange: (lat: number, lng: number) => void
+}) {
+  const center: [number, number] = [lat, lng]
+
+  function MapEvents() {
+    useMapEvents({
+      click(e) {
+        onChange(e.latlng.lat, e.latlng.lng)
+      },
+    })
+    return null
+  }
+
+  function RecenterMap({ center }: { center: [number, number] }) {
+    const map = useMap()
+    React.useEffect(() => {
+      map.setView(center)
+    }, [center[0], center[1]])
+    return null
+  }
+
+  return (
+    <MapContainer
+      center={center}
+      zoom={12}
+      style={{ height: "100%", width: "100%" }}
+    >
+      <TileLayer
+        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; OpenStreetMap'
+      />
+      <Marker
+        position={center}
+        icon={defaultIcon}
+        draggable
+        eventHandlers={{
+          dragend: (e) => {
+            const p = (e.target as L.Marker).getLatLng()
+            onChange(p.lat, p.lng)
+          },
+        }}
+      />
+      <Circle
+        center={center}
+        radius={radiusKm * 1000}
+        pathOptions={{ color: "#0e7490", fillColor: "#0e7490", fillOpacity: 0.12 }}
+      />
+      <MapEvents />
+      <RecenterMap center={center} />
+    </MapContainer>
   )
 }
