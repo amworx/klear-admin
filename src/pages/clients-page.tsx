@@ -33,6 +33,30 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import L from "leaflet"
+import "leaflet/dist/leaflet.css"
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  useMap,
+  useMapEvents,
+} from "react-leaflet"
+
+const defaultIcon = L.icon({
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+})
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -47,14 +71,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -197,6 +213,28 @@ function AddressFormFields({
   onChange: (patch: Partial<AddressForm>) => void
   t: (key: TranslationKey) => string
 }) {
+  const [mapOpen, setMapOpen] = React.useState(false)
+  const latNum = Number(form.lat)
+  const lngNum = Number(form.lng)
+  const hasCoord = !isNaN(latNum) && !isNaN(lngNum) && form.lat !== "" && form.lng !== ""
+  const displayLat = hasCoord ? latNum : 36.5114
+  const displayLng = hasCoord ? lngNum : 36.8681
+
+  const handleMapPick = async (lat: number, lng: number) => {
+    let address = `${lat.toFixed(5)}, ${lng.toFixed(5)}`
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+        { headers: { Accept: "application/json" } }
+      )
+      const data = (await res.json()) as { display_name?: string }
+      if (data.display_name) address = data.display_name
+    } catch {
+      // keep fallback
+    }
+    onChange({ lat: String(lat.toFixed(6)), lng: String(lng.toFixed(6)), address })
+  }
+
   return (
     <div className="grid gap-3">
       <div className="grid grid-cols-2 gap-3">
@@ -218,34 +256,82 @@ function AddressFormFields({
         </div>
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor="addr-address">{t("addressText")}</Label>
-        <Input
-          id="addr-address"
-          value={form.address}
-          onChange={(e) => onChange({ address: e.target.value })}
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="grid gap-1.5">
-          <Label htmlFor="addr-lat">{t("lat")}</Label>
-          <Input
-            id="addr-lat"
-            dir="ltr"
-            value={form.lat}
-            onChange={(e) => onChange({ lat: e.target.value })}
-          />
+        <Label>{t("addressText")}</Label>
+        <div className="rounded-lg border p-3 text-sm bg-muted/30">
+          {form.address ? form.address : <span className="text-muted-foreground">— {t("addressText")} —</span>}
         </div>
-        <div className="grid gap-1.5">
-          <Label htmlFor="addr-lng">{t("lng")}</Label>
-          <Input
-            id="addr-lng"
-            dir="ltr"
-            value={form.lng}
-            onChange={(e) => onChange({ lng: e.target.value })}
-          />
+        <div className="text-xs text-muted-foreground">
+          {hasCoord ? `${latNum.toFixed(5)}, ${lngNum.toFixed(5)}` : t("lat") + " / " + t("lng") + " — Pick on map"}
         </div>
+        <Button type="button" variant="outline" onClick={() => setMapOpen(true)} className="w-full">
+          📍 Pick on map
+        </Button>
       </div>
+
+      <Dialog open={mapOpen} onOpenChange={setMapOpen}>
+        <DialogContent className="max-w-2xl p-0 overflow-hidden gap-0">
+          <DialogHeader className="p-4 pb-2">
+            <DialogTitle>Pick location</DialogTitle>
+            <DialogDescription>Click on map or drag pin to set address</DialogDescription>
+          </DialogHeader>
+          <div className="h-[420px] w-full">
+            <AddressMapPicker
+              lat={displayLat}
+              lng={displayLng}
+              onChange={handleMapPick}
+            />
+          </div>
+          <DialogFooter className="p-4 pt-3">
+            <Button onClick={() => setMapOpen(false)}>{t("save")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+  )
+}
+
+function AddressMapPicker({
+  lat,
+  lng,
+  onChange,
+}: {
+  lat: number
+  lng: number
+  onChange: (lat: number, lng: number) => void
+}) {
+  const center: [number, number] = [lat, lng]
+  function MapEvents() {
+    useMapEvents({
+      click(e) {
+        onChange(e.latlng.lat, e.latlng.lng)
+      },
+    })
+    return null
+  }
+  function Recenter({ center }: { center: [number, number] }) {
+    const map = useMap()
+    React.useEffect(() => {
+      map.setView(center)
+    }, [center[0], center[1]])
+    return null
+  }
+  return (
+    <MapContainer center={center} zoom={14} style={{ height: "100%", width: "100%" }}>
+      <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap" />
+      <Marker
+        position={center}
+        icon={defaultIcon}
+        draggable
+        eventHandlers={{
+          dragend: (e) => {
+            const p = (e.target as L.Marker).getLatLng()
+            onChange(p.lat, p.lng)
+          },
+        }}
+      />
+      <MapEvents />
+      <Recenter center={center} />
+    </MapContainer>
   )
 }
 
