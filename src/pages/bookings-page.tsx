@@ -7,6 +7,7 @@ import {
 } from "@/lib/hooks/queries"
 import { useI18n, formatCurrency, formatDateTime } from "@/lib/i18n"
 import type { BookingStatus, BookingWithRelations } from "@/lib/types"
+import { isBookingExpired, isBookingExpiringSoon } from "@/lib/types"
 import {
   PageHeader,
   ErrorState,
@@ -64,6 +65,7 @@ export function BookingsPage() {
     in_progress: t("statusInProgress"),
     completed: t("statusCompleted"),
     cancelled: t("statusCancelled"),
+    needs_attention: t("filterNeedsAttention"),
   }
 
   const filtered = (bookings.data ?? []).filter((b) => {
@@ -76,7 +78,12 @@ export function BookingsPage() {
       (b.service?.name_ar ?? "").toLowerCase().includes(q) ||
       (b.service?.name_en ?? "").toLowerCase().includes(q) ||
       (b.address ?? "").toLowerCase().includes(q)
-    const matchesStatus = statusFilter === "all" || b.status === statusFilter
+    const matchesStatus =
+      statusFilter === "all"
+        ? true
+        : statusFilter === "needs_attention"
+          ? isBookingExpired(b) || isBookingExpiringSoon(b)
+          : b.status === statusFilter
     return matchesSearch && matchesStatus
   })
 
@@ -155,6 +162,9 @@ export function BookingsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t("all")}</SelectItem>
+                  <SelectItem value="needs_attention">
+                    {t("filterNeedsAttention")}
+                  </SelectItem>
                   {STATUS_OPTIONS.map((s) => (
                     <SelectItem key={s} value={s}>
                       {statusLabel[s]}
@@ -209,13 +219,28 @@ export function BookingsPage() {
                               {" · "}
                               {formatDateTime(b.scheduled_at)}
                             </div>
-                            <div className="mt-1.5 flex items-center gap-1.5">
+                            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                               <Badge
                                 variant="secondary"
                                 className={`border-0 ${STATUS_BADGE[b.status]}`}
                               >
                                 {statusLabel[b.status]}
                               </Badge>
+                              {isBookingExpired(b) ? (
+                                <Badge
+                                  variant="secondary"
+                                  className="border-0 bg-red-500/15 text-red-700 hover:bg-red-500/15 dark:text-red-300"
+                                >
+                                  {t("expiredBadge")}
+                                </Badge>
+                              ) : isBookingExpiringSoon(b) ? (
+                                <Badge
+                                  variant="secondary"
+                                  className="border-0 bg-orange-500/15 text-orange-700 hover:bg-orange-500/15 dark:text-orange-300"
+                                >
+                                  {t("expiringSoonBadge")}
+                                </Badge>
+                              ) : null}
                               {b.customer?.client_no ? (
                                 <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
                                   <span className="opacity-70">
@@ -282,6 +307,15 @@ export function BookingsPage() {
 
                 <div className="min-h-0 flex-1 overflow-y-auto">
                   <div className="space-y-6 p-4">
+                    {isBookingExpired(selected) ? (
+                      <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+                        {t("expiredBanner")}
+                      </div>
+                    ) : isBookingExpiringSoon(selected) ? (
+                      <div className="rounded-lg border border-orange-200 bg-orange-50 px-3 py-2.5 text-sm font-medium text-orange-700 dark:border-orange-900 dark:bg-orange-950/40 dark:text-orange-300">
+                        {t("expiringSoonBanner")}
+                      </div>
+                    ) : null}
                     <dl className="grid grid-cols-2 gap-3 text-sm">
                       <div>
                         <dt className="text-muted-foreground">{t("customer")}</dt>

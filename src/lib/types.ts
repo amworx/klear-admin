@@ -66,6 +66,22 @@ export type Booking = {
   updated_at: string
 }
 
+function bookingWindowEnd(b: Booking): Date {
+  return new Date(b.scheduled_end ?? b.scheduled_at)
+}
+
+export function isBookingExpired(b: Booking): boolean {
+  if (b.status === "completed" || b.status === "cancelled") return false
+  return bookingWindowEnd(b).getTime() < Date.now()
+}
+
+export function isBookingExpiringSoon(b: Booking): boolean {
+  if (b.status === "completed" || b.status === "cancelled") return false
+  if (isBookingExpired(b)) return false
+  const remaining = bookingWindowEnd(b).getTime() - Date.now()
+  return remaining > 0 && remaining < 3 * 60 * 60 * 1000
+}
+
 export type PaymentStatus = "pending" | "paid" | "failed" | "refunded"
 
 export type Payment = {
